@@ -1,0 +1,34 @@
+{
+  "name": "rider-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo/metro-runtime": "~56.0.13",
+    "@react-native-async-storage/async-storage": "^3.1.0",
+    "@supabase/supabase-js": "^2.106.2",
+    "axios": "^1.16.1",
+    "expo": "~56.0.6",
+    "expo-haptics": "^56.0.3",
+    "expo-linear-gradient": "^56.0.4",
+    "expo-location": "~56.0.14",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-maps": "1.27.2",
+    "react-native-url-polyfill": "^3.0.0",
+    "react-native-web": "^0.21.2",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true
+}
