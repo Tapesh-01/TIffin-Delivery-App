@@ -1,0 +1,18 @@
+# Dependencies
+**/node_modules/
+
+# Local env files (keys, secrets, config)
+**/.env
+**/firebase-service-account.json
+
+# Build directories
+**/dist/
+**/.expo/
+**/web-build/
+
+# IDE/System files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
