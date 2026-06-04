@@ -1,0 +1,117 @@
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.menu-header {
+  margin-bottom: 8px;
+}
+
+.menu-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.menu-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.menu-row {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.menu-row:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.menu-emoji-wrap {
+  width: 48px;
+  height: 48px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 1px solid var(--border);
+}
+
+.menu-emoji-input {
+  background: transparent;
+  border: none;
+  width: 40px;
+  text-align: center;
+  font-size: 24px;
+  outline: none;
+}
+
+.menu-day-name-wrap {
+  width: 100px;
+}
+
+.menu-day-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+.menu-fields-wrap {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  min-width: 250px;
+}
+
+.menu-field-input {
+  flex: 1;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.menu-field-input:focus {
+  border-color: var(--primary);
+}
+
+.btn-save-menu {
+  background-color: var(--accent-green);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-save-menu:hover {
+  background-color: #059669;
+}
