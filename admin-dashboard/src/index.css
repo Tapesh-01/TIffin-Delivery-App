@@ -1,0 +1,299 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Lora', 'Georgia', serif;
+  
+  /* Cream Light Theme (Zomato/Premium restaurant dashboard style) */
+  --bg-primary: #FAF8F5;       /* Soft warm cream background */
+  --bg-secondary: #FFFFFF;     /* Pure white for panels & cards */
+  --bg-tertiary: #FCFBF9;      /* Very soft cream-white */
+  
+  --text-primary: #1C1917;     /* Deep stone charcoal */
+  --text-secondary: #5C524A;   /* Soft warm grey */
+  --text-muted: #9E9388;       /* Stone grey */
+  
+  --primary: #F97316;          /* Deep orange-red accent */
+  --primary-hover: #EA580C;
+  --primary-light: rgba(249, 115, 22, 0.08);
+  
+  --accent-green: #10B981;
+  --accent-green-light: rgba(16, 185, 129, 0.08);
+  --accent-blue: #3B82F6;
+  --accent-blue-light: rgba(59, 130, 246, 0.08);
+  --accent-purple: #8B5CF6;
+  --accent-purple-light: rgba(139, 92, 246, 0.08);
+  --accent-gold: #D97706;
+  --accent-gold-light: rgba(217, 119, 6, 0.08);
+  --accent-red: #EF4444;
+  --accent-red-light: rgba(239, 68, 68, 0.08);
+  
+  --border: #F1EFEA;           /* Warm light border */
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+  
+  --shadow: 0 4px 20px -2px rgba(107, 94, 84, 0.04), 0 2px 8px -1px rgba(107, 94, 84, 0.02);
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Theme variables */
+:root.dark {
+  --bg-primary: #0B0F19;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1F2937;
+  
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  
+  --border: #272E3F;
+  --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Serif font style for headings */
+h1, h2, h3, h4, .serif-text {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Styled Table Classes */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 14px 18px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  font-size: 14px;
+  color: var(--text-primary);
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+tr:hover td {
+  background-color: var(--bg-tertiary);
+}
+
+/* Status Badges matching user image */
+.status-pill {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background-color: #FEF3C7;
+  color: #D97706;
+}
+
+.status-preparing, .status-cooking {
+  background-color: #FFEDD5;
+  color: #EA580C;
+}
+
+.status-on-the-way, .status-out_for_delivery {
+  background-color: #DBEAFE;
+  color: #2563EB;
+}
+
+.status-delivered {
+  background-color: #D1FAE5;
+  color: #059669;
+}
+
+/* Custom Card styling with micro-shadow and border */
+.premium-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -4px rgba(107, 94, 84, 0.08);
+}
+
+/* Side navigation active style */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+/* Pulse animation for active delivery riders */
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+.pulse-dot {
+  width: 12px;
+  height: 12px;
+  background-color: var(--accent-green);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+  display: inline-block;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* --- Interactive Premium Animations & Live Features --- */
+
+/* Shimmer Loader Styling */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-block {
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg-tertiary) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+/* Stat Card Glow & Transition on Socket Update */
+@keyframes socketGlow {
+  0% { box-shadow: 0 0 0 0px rgba(249, 115, 22, 0.5); border-color: var(--primary); }
+  50% { box-shadow: 0 0 0 12px rgba(249, 115, 22, 0); border-color: var(--primary); }
+  100% { box-shadow: 0 0 0 0px rgba(249, 115, 22, 0); }
+}
+
+.socket-updated-glow {
+  animation: socketGlow 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Live Mode Pulse Indicator */
+@keyframes livePulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.live-pulse-icon {
+  display: inline-block;
+  animation: livePulse 1.8s infinite ease-in-out;
+}
+
+/* Slide in animation for Live Activity Ticker list items */
+@keyframes slideDownIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.activity-ticker-item {
+  animation: slideDownIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smooth growth transition for animated charts */
+.chart-bar-grow {
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s ease;
+}
+
+.chart-bar-hover {
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.chart-bar-hover:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+/* Real-time Order Notification Keyframes */
+@keyframes slideIn {
+  0% { transform: translateX(120%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes ring {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(8deg); }
+  40% { transform: rotate(-6deg); }
+  50% { transform: rotate(4deg); }
+  60% { transform: rotate(-2deg); }
+  70% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
