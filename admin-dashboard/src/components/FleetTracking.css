@@ -1,0 +1,313 @@
+.fleet-tracking-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.fleet-tracking-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+@media (max-width: 1024px) {
+  .fleet-tracking-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shipments-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.shipments-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+}
+
+.shipments-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.shipments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.shipment-item {
+  padding: 14px;
+  border-radius: 10px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.shipment-item:hover {
+  border-color: var(--primary);
+}
+
+.shipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.shipment-user {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.shipment-address {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+.shipment-type-badge {
+  font-size: 10px;
+  font-weight: 600;
+  display: block;
+  margin-top: 4px;
+}
+
+.shipment-status-badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.shipment-actions-bar {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  justify-content: flex-end;
+}
+
+.btn-start-cooking {
+  background-color: rgba(59,130,246,0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-start-cooking:hover {
+  background-color: rgba(59,130,246,0.25);
+}
+
+.btn-pack-order {
+  background-color: rgba(16,185,129,0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(16,185,129,0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-pack-order:hover {
+  background-color: rgba(16,185,129,0.25);
+}
+
+.btn-dispatch-order {
+  background-color: var(--primary);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.btn-dispatch-order:hover {
+  background-color: var(--primary-hover);
+}
+
+.map-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.map-simulation-area {
+  flex: 1;
+  background-color: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px dashed #374151;
+  position: relative;
+  overflow: hidden;
+  height: 360px;
+}
+
+.kitchen-node {
+  position: absolute;
+  left: 20px;
+  top: 160px;
+  text-align: center;
+}
+
+.kitchen-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin: 0 auto;
+}
+
+.node-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.hostel-node {
+  position: absolute;
+  text-align: center;
+}
+
+.hostel-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin: 0 auto;
+}
+
+.road-path-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rider-dot-indicator {
+  position: absolute;
+  transition: all 0.1s linear;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.rider-dot-icon {
+  background-color: #8b5cf6;
+  padding: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(139,92,246,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rider-dot-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.live-rider-indicator {
+  position: absolute;
+  transition: all 1s ease;
+  transform: translate(-50%, -50%);
+  z-index: 12;
+}
+
+.live-rider-icon {
+  background-color: var(--accent-green);
+  padding: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(16,185,129,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+.live-rider-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--accent-green);
+  color: var(--text-primary);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.map-empty-state {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
