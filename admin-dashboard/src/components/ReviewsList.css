@@ -1,0 +1,418 @@
+.reviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.reviews-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.section-title-badge {
+  font-size: 12px;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-weight: 600;
+}
+
+.section-title-badge.live {
+  background-color: var(--accent-orange-light);
+  color: var(--primary);
+}
+
+.section-title-badge.purple {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.section-title-badge.red {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red);
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.avg-rating-badge {
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border: 2px solid #F59E0B;
+  border-radius: 16px;
+  padding: 12px 20px;
+}
+
+.avg-rating-val {
+  font-size: 28px;
+  font-weight: bold;
+  color: #F59E0B;
+  line-height: 1.2;
+}
+
+.avg-rating-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.avg-rating-stars {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.ratings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.rating-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rating-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.rating-card-live-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.rating-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rating-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.rating-meal-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 2px 0 0 0;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.rating-comment {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  font-style: italic;
+  margin: 0;
+}
+
+.rating-card-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.rating-attention-badge {
+  color: var(--accent-red);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rating-excellent-badge {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.vacations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vacation-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+
+.vacation-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.vacation-user-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.vacation-status-badge {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.vacation-status-badge.pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.vacation-status-badge.active {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.vacation-status-badge.completed {
+  background-color: #F3F4F6;
+  color: #6B7280;
+}
+
+.vacation-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.vacation-reason {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+  font-style: italic;
+}
+
+.vacation-timestamp {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.vacation-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-approve {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background-color: var(--accent-green);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-approve:hover {
+  background-color: #059669;
+}
+
+.btn-decline {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background-color: transparent;
+  color: var(--accent-red);
+  border: 1.5px solid var(--accent-red);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-decline:hover {
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.btn-complete {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background-color: #6B7280;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-complete:hover {
+  background-color: #4B5563;
+}
+
+.poll-section-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 30px;
+}
+
+@media (max-width: 768px) {
+  .poll-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.poll-details-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.poll-question {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin-top: 6px;
+  margin-bottom: 16px;
+}
+
+.poll-bars-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.poll-option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.poll-option-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.poll-option-label.leading {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.poll-option-stats {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.poll-bar-container {
+  height: 8px;
+  background-color: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.poll-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.poll-leader-msg {
+  font-size: 13px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.poll-votes-total {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.poll-create-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.poll-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.poll-btn-deploy {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  box-shadow: 0 4px 6px -1px rgba(249,115,22,0.2);
+  transition: background-color 0.2s;
+}
+
+.poll-btn-deploy:hover {
+  background-color: var(--primary-hover);
+}
