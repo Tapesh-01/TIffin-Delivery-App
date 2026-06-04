@@ -2,6 +2,8 @@
 
 A premium, state-of-the-art, and real-time **Tiffin Delivery & Management System** designed to bridge the gap between Students, Riders, and Kitchen Administrators. Built with a mono-repo structure, it integrates hardware-accelerated SVG animations, live street-following GPS simulation, interactive analytics, and bulk order workflow triggers.
 
+![My Tiffin App Ecosystem Infographic](./ecosystem_infographic.png)
+
 ---
 
 ## 🏛️ Project Architecture (Mono-Repo)
