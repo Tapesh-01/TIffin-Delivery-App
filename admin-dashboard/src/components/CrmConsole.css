@@ -1,0 +1,297 @@
+.crm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.crm-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.crm-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.crm-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.search-box-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 10px;
+  width: 320px;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  width: 100%;
+  font-size: 13px;
+}
+
+.table-responsive {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.crm-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.crm-table th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  font-weight: 600;
+}
+
+.crm-table td {
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 16px;
+  vertical-align: middle;
+}
+
+.plan-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.plan-badge.premium {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.plan-badge.standard {
+  background-color: rgba(249, 115, 22, 0.15);
+  color: var(--primary);
+}
+
+.plan-badge.basic {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.plan-badge.none {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.wallet-balance-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-balance {
+  font-weight: bold;
+}
+
+.wallet-balance.low {
+  color: var(--accent-red);
+}
+
+.wallet-balance.good {
+  color: var(--accent-green);
+}
+
+.low-balance-warning {
+  font-size: 10px;
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.actions-cell-wrap {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.btn-refund {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-refund:hover {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+.btn-delete-profile {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-delete-profile:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.online-status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.online-status-badge.online {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+}
+
+.online-status-badge.offline {
+  background-color: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  zIndex: 100;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-input-number {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  outline: none;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.form-select-reason {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.btn-modal-cancel {
+  flex: 1;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-modal-cancel:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.btn-modal-confirm {
+  flex: 1;
+  background-color: var(--primary);
+  border: none;
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-modal-confirm:hover {
+  background-color: var(--primary-hover);
+}
