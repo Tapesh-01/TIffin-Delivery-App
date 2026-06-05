@@ -5,6 +5,9 @@ import { Platform } from 'react-native';
 // Use appropriate localhost based on environment
 // For Android Emulator, localhost is 10.0.2.2. For iOS/Web, it's localhost or 127.0.0.1.
 const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api';
   }
