@@ -9,13 +9,13 @@
     "@shopify/flash-list": "2.0.2",
     "@supabase/supabase-js": "^2.106.2",
     "axios": "^1.16.1",
-    "expo": "~56.0.6",
+    "expo": "~56.0.9",
+    "expo-device": "~56.0.4",
     "expo-font": "^56.0.5",
-    "expo-notifications": "~0.28.16",
-    "expo-device": "~6.0.2",
     "expo-haptics": "^56.0.3",
     "expo-linear-gradient": "^56.0.4",
-    "expo-router": "^56.2.7",
+    "expo-notifications": "~56.0.16",
+    "expo-router": "~56.2.9",
     "expo-splash-screen": "~56.0.10",
     "expo-status-bar": "~56.0.4",
     "firebase": "^12.14.0",
@@ -37,8 +37,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "private": true
