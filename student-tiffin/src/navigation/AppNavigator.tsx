@@ -152,11 +152,14 @@ const AppNavigatorComponent: React.FC = () => {
           fetchUserTransactions(data.user.id);
           setupSocket(data.user.id);
           
+          const profileCompleted = await AsyncStorage.getItem('@tiffin_profile_completed');
           const needsProfileSetup = 
-            data.user.name === 'New Student' || 
-            !data.user.addressLine || 
-            !data.user.city || 
-            !data.user.gender;
+            profileCompleted !== 'true' && (
+              data.user.name === 'New Student' || 
+              !data.user.addressLine || 
+              !data.user.city || 
+              !data.user.gender
+            );
 
           if (needsProfileSetup) {
             setCurrentScreen('name_setup');
@@ -214,12 +217,15 @@ const AppNavigatorComponent: React.FC = () => {
     fetchUserTransactions(userData.id);
     setupSocket(userData.id);
 
+    const profileCompleted = await AsyncStorage.getItem('@tiffin_profile_completed');
     const needsProfileSetup = 
-      isNewUser || 
-      userData.name === 'New Student' || 
-      !userData.addressLine || 
-      !userData.city || 
-      !userData.gender;
+      profileCompleted !== 'true' && (
+        isNewUser || 
+        userData.name === 'New Student' || 
+        !userData.addressLine || 
+        !userData.city || 
+        !userData.gender
+      );
 
     if (needsProfileSetup) {
       navigate('name_setup');
@@ -229,13 +235,15 @@ const AppNavigatorComponent: React.FC = () => {
     syncPushToken();
   };
 
-  const handleNameSetupComplete = (updatedUser: User) => {
+  const handleNameSetupComplete = async (updatedUser: User) => {
+    await AsyncStorage.setItem('@tiffin_profile_completed', 'true');
     setUser(updatedUser);
     navigate('home');
   };
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('@tiffin_token');
+    await AsyncStorage.removeItem('@tiffin_profile_completed');
     socket.disconnect();
     setUser(null);
     navigate('login');
