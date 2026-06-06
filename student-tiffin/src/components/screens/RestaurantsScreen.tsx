@@ -1103,8 +1103,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Reusable Bottom Bar */}
-      <BottomBar active="restaurants" navigate={navigate} />
+
 
       {/* Restaurant Menu Modal Overlay (Absolutely Positioned to fit inside the mobile frame) */}
       {viewingRestaurant && (
@@ -2418,6 +2417,9 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
           </Animated.View>
         </View>
       )}
+
+      {/* Reusable Bottom Bar - Rendered last to sit on top of all overlays */}
+      <BottomBar active="restaurants" navigate={navigate} />
     </View>
   );
 };
