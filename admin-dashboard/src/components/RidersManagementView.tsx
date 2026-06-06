@@ -100,9 +100,11 @@ export const RidersManagementView: React.FC<RidersManagementViewProps> = ({ prof
       if (data.success) {
         setEditingRiderId(null);
         loadAllData();
+        alert('Rider details saved successfully! ✅');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update rider:', err);
+      alert(`Failed to save: ${err.response?.data?.message || err.message}`);
     }
   };
 
