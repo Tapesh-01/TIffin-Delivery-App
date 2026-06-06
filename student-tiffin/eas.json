@@ -14,7 +14,13 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://tiffin-delivery-app.onrender.com/api",
-        "EXPO_PUBLIC_SOCKET_URL": "https://tiffin-delivery-app.onrender.com"
+        "EXPO_PUBLIC_SOCKET_URL": "https://tiffin-delivery-app.onrender.com",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyBvMUN7b2iLnMw8j7viNBnmAv81hAP3IyI",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "my-tiffin-app-2b56c.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "my-tiffin-app-2b56c",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "my-tiffin-app-2b56c.firebasestorage.app",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "322189659203",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:322189659203:web:ab50c3c8f788921bb858f6"
       }
     },
     "production": {}
