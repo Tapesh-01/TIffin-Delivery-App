@@ -43,6 +43,14 @@ function DashboardApp() {
   const [loginError, setLoginError] = useState('');
   const [currentUser, setCurrentUser] = useState<any>(null);
 
+  // UI and Registration State
+  const [activeInput, setActiveInput] = useState<string | null>(null);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState('');
+
   const activeTab = location.pathname.replace('/', '') || 'dashboard';
   const [roleMode, setRoleMode] = useState<'owner' | 'kitchen' | 'support'>((localStorage.getItem('admin_role_mode') as any) || 'owner');
   const [searchQuery, setSearchQuery] = useState('');
@@ -353,6 +361,8 @@ function DashboardApp() {
       setIsAuthenticated(true);
       loadAllData();
       connectSocket();
+    } else {
+      setIsLoading(false); // Disable initial loading so Sign In is interactive immediately
     }
     return () => {
       disconnectSocket();
@@ -386,6 +396,35 @@ function DashboardApp() {
       }
     } catch (err: any) {
       setLoginError(err.response?.data?.message || 'Login failed. Verify backend server is running.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setRegisterSuccess('');
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/register', {
+        name: registerName,
+        email: registerEmail,
+        password: registerPassword,
+        role: 'admin' // explicitly register as admin
+      });
+      
+      if (response.data && response.data.success) {
+        setRegisterSuccess('Admin registered successfully! You can now log in.');
+        setRegisterName('');
+        setRegisterEmail('');
+        setRegisterPassword('');
+        setIsRegisterMode(false);
+      } else {
+        setLoginError('Registration failed');
+      }
+    } catch (err: any) {
+      setLoginError(err.response?.data?.message || 'Registration failed. Verify backend server is running.');
     } finally {
       setIsLoading(false);
     }
@@ -1004,101 +1043,339 @@ function DashboardApp() {
             justifyContent: 'center', 
             alignItems: 'center', 
             minHeight: '100vh', 
-            backgroundColor: '#0f172a', // dark premium background
+            width: '100%',
+            flex: 1,
+            background: 'radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 40%), #0b0f19',
             color: '#f8fafc',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
+            fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+            padding: '20px'
           }}>
+            {/* Login Card */}
             <div style={{ 
               width: '100%', 
-              maxWidth: '420px', 
-              backgroundColor: '#1e293b', 
-              border: '1px solid #334155', 
-              borderRadius: '16px', 
-              padding: '40px',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+              maxWidth: '400px', 
+              backgroundColor: 'rgba(30, 41, 59, 0.7)', 
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)', 
+              borderRadius: '20px', 
+              padding: '36px',
+              boxShadow: '0 20px 40px -5px rgba(0, 0, 0, 0.5), 0 0 100px rgba(249, 115, 22, 0.05)',
               display: 'flex',
               flexDirection: 'column',
               gap: '24px'
             }}>
-              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <span style={{ fontSize: '48px' }}>🍱</span>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', margin: 0 }}>Student Tiffin</h2>
-                <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>Admin Portal Dashboard</p>
+              {/* Logo & Header */}
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '64px',
+                  height: '64px',
+                  backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                  borderRadius: '50%',
+                  margin: '0 auto 8px auto',
+                  border: '1px solid rgba(249, 115, 22, 0.3)',
+                  boxShadow: '0 0 20px rgba(249, 115, 22, 0.2)'
+                }}>
+                  <span style={{ fontSize: '32px' }}>🍱</span>
+                </div>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f97316', margin: 0, fontFamily: "'Inter', sans-serif" }}>Student Tiffin</h2>
+                <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>Admin Portal Dashboard</p>
               </div>
 
-              {loginError ? (
+              {/* Tab Switcher */}
+              <div style={{
+                display: 'flex',
+                backgroundColor: 'rgba(15, 23, 42, 0.5)',
+                padding: '4px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+              }}>
+                <button
+                  onClick={() => {
+                    setIsRegisterMode(false);
+                    setLoginError('');
+                    setRegisterSuccess('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: !isRegisterMode ? '#f97316' : 'transparent',
+                    color: !isRegisterMode ? '#ffffff' : '#94a3b8'
+                  }}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRegisterMode(true);
+                    setLoginError('');
+                    setRegisterSuccess('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: isRegisterMode ? '#f97316' : 'transparent',
+                    color: isRegisterMode ? '#ffffff' : '#94a3b8'
+                  }}
+                >
+                  Create Admin
+                </button>
+              </div>
+
+              {/* Status Messages */}
+              {loginError && (
                 <div style={{ 
                   backgroundColor: 'rgba(239, 68, 68, 0.1)', 
                   color: '#ef4444', 
-                  padding: '12px', 
-                  borderRadius: '8px', 
+                  padding: '12px 14px', 
+                  borderRadius: '10px', 
                   fontSize: '13px', 
                   border: '1px solid rgba(239, 68, 68, 0.2)',
-                  fontWeight: 500
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
-                  ⚠️ {loginError}
+                  <span>⚠️</span>
+                  <span>{loginError}</span>
                 </div>
-              ) : null}
+              )}
 
-              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>Email Address</label>
-                  <input 
-                    type="email" 
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="admin@tiffin.com"
+              {registerSuccess && (
+                <div style={{ 
+                  backgroundColor: 'rgba(16, 185, 129, 0.1)', 
+                  color: '#10b981', 
+                  padding: '12px 14px', 
+                  borderRadius: '10px', 
+                  fontSize: '13px', 
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>✅</span>
+                  <span>{registerSuccess}</span>
+                </div>
+              )}
+
+              {/* Forms */}
+              {!isRegisterMode ? (
+                /* Login Form */
+                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>✉️</span> Email Address
+                    </label>
+                    <input 
+                      type="email" 
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="admin@tiffin.com"
+                      style={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+                        border: activeInput === 'email' ? '1px solid #f97316' : '1px solid rgba(255, 255, 255, 0.08)', 
+                        color: '#f8fafc', 
+                        padding: '12px 14px', 
+                        borderRadius: '10px', 
+                        fontSize: '14px', 
+                        outline: 'none',
+                        boxShadow: activeInput === 'email' ? '0 0 0 3px rgba(249, 115, 22, 0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onFocus={() => setActiveInput('email')}
+                      onBlur={() => setActiveInput(null)}
+                      required 
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>🔒</span> Password
+                    </label>
+                    <input 
+                      type="password" 
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+                        border: activeInput === 'password' ? '1px solid #f97316' : '1px solid rgba(255, 255, 255, 0.08)', 
+                        color: '#f8fafc', 
+                        padding: '12px 14px', 
+                        borderRadius: '10px', 
+                        fontSize: '14px', 
+                        outline: 'none',
+                        boxShadow: activeInput === 'password' ? '0 0 0 3px rgba(249, 115, 22, 0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onFocus={() => setActiveInput('password')}
+                      onBlur={() => setActiveInput(null)}
+                      required 
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
                     style={{ 
-                      backgroundColor: '#0f172a', 
-                      border: '1px solid #334155', 
-                      color: '#f8fafc', 
-                      padding: '12px 14px', 
-                      borderRadius: '8px', 
+                      backgroundColor: '#f97316', 
+                      color: '#ffffff', 
+                      border: 'none', 
+                      borderRadius: '10px', 
+                      padding: '14px', 
                       fontSize: '14px', 
-                      outline: 'none'
+                      fontWeight: 600, 
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)',
+                      transition: 'all 0.2s ease',
+                      opacity: isLoading ? 0.7 : 1,
+                      marginTop: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
                     }}
-                    required 
-                  />
-                </div>
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="live-pulse-icon" style={{ fontSize: '16px' }}>⏳</span>
+                        Signing In...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </button>
+                </form>
+              ) : (
+                /* Register Form */
+                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>👤</span> Full Name
+                    </label>
+                    <input 
+                      type="text" 
+                      value={registerName}
+                      onChange={(e) => setRegisterName(e.target.value)}
+                      placeholder="Admin Name"
+                      style={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+                        border: activeInput === 'name' ? '1px solid #f97316' : '1px solid rgba(255, 255, 255, 0.08)', 
+                        color: '#f8fafc', 
+                        padding: '12px 14px', 
+                        borderRadius: '10px', 
+                        fontSize: '14px', 
+                        outline: 'none',
+                        boxShadow: activeInput === 'name' ? '0 0 0 3px rgba(249, 115, 22, 0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onFocus={() => setActiveInput('name')}
+                      onBlur={() => setActiveInput(null)}
+                      required 
+                    />
+                  </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>Password</label>
-                  <input 
-                    type="password" 
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    placeholder="••••••••"
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>✉️</span> Email Address
+                    </label>
+                    <input 
+                      type="email" 
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      placeholder="admin@tiffin.com"
+                      style={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+                        border: activeInput === 'regEmail' ? '1px solid #f97316' : '1px solid rgba(255, 255, 255, 0.08)', 
+                        color: '#f8fafc', 
+                        padding: '12px 14px', 
+                        borderRadius: '10px', 
+                        fontSize: '14px', 
+                        outline: 'none',
+                        boxShadow: activeInput === 'regEmail' ? '0 0 0 3px rgba(249, 115, 22, 0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onFocus={() => setActiveInput('regEmail')}
+                      onBlur={() => setActiveInput(null)}
+                      required 
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>🔒</span> Password
+                    </label>
+                    <input 
+                      type="password" 
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{ 
+                        backgroundColor: 'rgba(15, 23, 42, 0.6)', 
+                        border: activeInput === 'regPassword' ? '1px solid #f97316' : '1px solid rgba(255, 255, 255, 0.08)', 
+                        color: '#f8fafc', 
+                        padding: '12px 14px', 
+                        borderRadius: '10px', 
+                        fontSize: '14px', 
+                        outline: 'none',
+                        boxShadow: activeInput === 'regPassword' ? '0 0 0 3px rgba(249, 115, 22, 0.15)' : 'none',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onFocus={() => setActiveInput('regPassword')}
+                      onBlur={() => setActiveInput(null)}
+                      required 
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
                     style={{ 
-                      backgroundColor: '#0f172a', 
-                      border: '1px solid #334155', 
-                      color: '#f8fafc', 
-                      padding: '12px 14px', 
-                      borderRadius: '8px', 
+                      backgroundColor: '#f97316', 
+                      color: '#ffffff', 
+                      border: 'none', 
+                      borderRadius: '10px', 
+                      padding: '14px', 
                       fontSize: '14px', 
-                      outline: 'none'
+                      fontWeight: 600, 
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)',
+                      transition: 'all 0.2s ease',
+                      opacity: isLoading ? 0.7 : 1,
+                      marginTop: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
                     }}
-                    required 
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  style={{ 
-                    backgroundColor: '#f97316', 
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    padding: '14px', 
-                    fontSize: '14px', 
-                    fontWeight: 600, 
-                    cursor: 'pointer',
-                    opacity: isLoading ? 0.7 : 1
-                  }}
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
-                </button>
-              </form>
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="live-pulse-icon" style={{ fontSize: '16px' }}>⏳</span>
+                        Registering...
+                      </>
+                    ) : (
+                      'Create Admin Account'
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         } />
