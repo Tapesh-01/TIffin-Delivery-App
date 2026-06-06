@@ -368,7 +368,13 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
-  },
+    minWidth: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      }
+    })
+  } as any,
   genderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -400,6 +406,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
   },
   errorText: {
     fontFamily: Typography.fontFamily.regular,

@@ -314,7 +314,13 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
-  },
+    minWidth: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      }
+    })
+  } as any,
   errorText: {
     fontFamily: Typography.fontFamily.regular,
     fontSize: Typography.fontSize.sm,

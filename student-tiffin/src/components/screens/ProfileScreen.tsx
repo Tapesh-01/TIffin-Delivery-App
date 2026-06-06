@@ -12,6 +12,7 @@ import {
   TextInput,
   ActivityIndicator,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { api } from '../../lib/api';
 import { socket } from '../../lib/socket';
@@ -1688,7 +1689,13 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
-  },
+    minWidth: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      }
+    })
+  } as any,
   addressPickerRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
