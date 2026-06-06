@@ -23,6 +23,7 @@ import { BottomBar } from './SubscriptionScreen';
 import { api } from '../../lib/api';
 import { CustomerMap } from '../CustomerMap';
 import { socket } from '../../lib/socket';
+import * as Location from 'expo-location';
 
 export interface MenuItem {
   id: string;
@@ -439,30 +440,35 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     }
   };
 
-  const handleDetectLocation = () => {
-    if (typeof navigator !== 'undefined' && navigator.geolocation) {
-      setFetchingGps(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const coords = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setDeliveryCoords(coords);
-          const placeName = await fetchPlaceName(coords.lat, coords.lng);
-          setAddressHostel(placeName);
-          setFetchingGps(false);
-          Alert.alert('📍 Location Found!', `Latitude: ${coords.lat.toFixed(5)}, Longitude: ${coords.lng.toFixed(5)}`);
-        },
-        (error) => {
-          setFetchingGps(false);
-          console.error('Error getting location: ', error);
-          Alert.alert('GPS Error', 'Your live location could not be determined. Please check your GPS permissions or enter your address manually.');
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    } else {
-      Alert.alert('Not Supported', 'Geolocation is not supported by your device/browser.');
+  const handleDetectLocation = async () => {
+    setFetchingGps(true);
+    try {
+      // 1. Request native location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setFetchingGps(false);
+        console.warn('Location permission denied by user.');
+        return;
+      }
+
+      // 2. Fetch coordinates natively
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const coords = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+      };
+      setDeliveryCoords(coords);
+      const placeName = await fetchPlaceName(coords.lat, coords.lng);
+      setAddressHostel(placeName);
+      setFetchingGps(false);
+      Alert.alert('📍 Location Found!', `Latitude: ${coords.lat.toFixed(5)}, Longitude: ${coords.lng.toFixed(5)}`);
+    } catch (error) {
+      setFetchingGps(false);
+      console.error('Error fetching GPS coordinates:', error);
+      // Fail silently without showing blocking popups on native builds
     }
   };
 
