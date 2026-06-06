@@ -80,8 +80,8 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
 
     return Math.round(totalMinutes * 60);
   };
-  const [driverName, setDriverName] = useState('Ramesh Kumar');
-  const [driverPhone, setDriverPhone] = useState('+91 99887 76655');
+  const [driverName, setDriverName] = useState('Assigning Rider...');
+  const [driverPhone, setDriverPhone] = useState('');
   const [driverLat, setDriverLat] = useState<number | null>(null);
   const [driverLng, setDriverLng] = useState<number | null>(null);
   const [restaurantLat, setRestaurantLat] = useState<number>(28.6139);
@@ -148,8 +148,8 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
         if (typeof window !== 'undefined' && window.history && window.history.pushState) {
           window.history.pushState(null, '', `/track-order/${formattedId}`);
         }
-        setDriverName(order.rider?.name || order.driverName || 'Ramesh Kumar');
-        setDriverPhone(order.rider?.phone || order.driverPhone || '+91 99887 76655');
+        setDriverName(order.rider?.name || 'Assigning Rider...');
+        setDriverPhone(order.rider?.phone || '');
         setHostelName(order.profiles?.address_hostel || 'BH-3');
 
         let dstLat = destinationLat;
@@ -356,8 +356,11 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
         setEmptyTiffinCollected(!!updateData.emptyTiffinCollected);
       }
       if (updateData.rider) {
-        setDriverName(updateData.rider.name || 'Ramesh Kumar');
-        setDriverPhone(updateData.rider.phone || '+91 99887 76655');
+        setDriverName(updateData.rider.name || 'Assigning Rider...');
+        setDriverPhone(updateData.rider.phone || '');
+      } else {
+        setDriverName('Assigning Rider...');
+        setDriverPhone('');
       }
       if (updateData.latitude !== null && updateData.latitude !== undefined && updateData.longitude !== null && updateData.longitude !== undefined) {
         setDestinationLat(updateData.latitude);
@@ -567,12 +570,14 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
               <Text style={styles.agentDetail}>Order ID: {orderId}</Text>
               <Text style={styles.agentDetail}>Scheduled: {AppConfig.deliveryTimeWindow}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.callBtn}
-              onPress={() => Linking.openURL(`tel:${driverPhone}`)}
-            >
-              <Text style={styles.callIcon}>📞</Text>
-            </TouchableOpacity>
+            {!!driverPhone && (
+              <TouchableOpacity
+                style={styles.callBtn}
+                onPress={() => Linking.openURL(`tel:${driverPhone}`)}
+              >
+                <Text style={styles.callIcon}>📞</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {emptyTiffinCollected && (
