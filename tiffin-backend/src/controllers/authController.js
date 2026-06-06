@@ -113,6 +113,7 @@ exports.getUserProfile = async (req, res) => {
           city: user.city,
           state: user.state,
           pincode: user.pincode,
+          gender: user.gender || '',
           referredBy: user.referredBy || null,
           pushToken: user.pushToken || null
         }
@@ -137,6 +138,7 @@ exports.updateUserProfile = async (req, res) => {
       user.city = req.body.city !== undefined ? req.body.city : user.city;
       user.state = req.body.state !== undefined ? req.body.state : user.state;
       user.pincode = req.body.pincode !== undefined ? req.body.pincode : user.pincode;
+      user.gender = req.body.gender !== undefined ? req.body.gender : user.gender;
       user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
       user.latitude = req.body.latitude !== undefined ? req.body.latitude : user.latitude;
       user.longitude = req.body.longitude !== undefined ? req.body.longitude : user.longitude;
@@ -298,6 +300,7 @@ exports.updateUserProfile = async (req, res) => {
           city: updatedUser.city,
           state: updatedUser.state,
           pincode: updatedUser.pincode,
+          gender: updatedUser.gender || '',
           referredBy: updatedUser.referredBy || null,
           pushToken: updatedUser.pushToken || null
         }
@@ -403,6 +406,7 @@ exports.phoneLogin = async (req, res) => {
         city: user.city || '',
         state: user.state || '',
         pincode: user.pincode || '',
+        gender: user.gender || '',
         referredBy: user.referredBy || null
       }
     });
@@ -479,6 +483,7 @@ exports.firebaseLogin = async (req, res) => {
         city: user.city || '',
         state: user.state || '',
         pincode: user.pincode || '',
+        gender: user.gender || '',
         referredBy: user.referredBy || null
       }
     });

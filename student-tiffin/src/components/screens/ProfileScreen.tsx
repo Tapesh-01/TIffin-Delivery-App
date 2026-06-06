@@ -67,6 +67,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [addressHostelState, setAddressHostelState] = useState(user.addressLine || 'BH-3');
   const [addressRoomState, setAddressRoomState] = useState(user.city || '');
   const [deliveryPhoneState, setDeliveryPhoneState] = useState(user.phone || '');
+  const [genderState, setGenderState] = useState(user.gender || 'Male');
   const [savingAddress, setSavingAddress] = useState(false);
 
   // Vacation states
@@ -117,9 +118,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     // Listen for vacation status updates from admin
     socket.on('vacation_status_updated', (data: any) => {
       const statusMessages: Record<string, string> = {
-        active: '✅ Admin ne aapki vacation approve kar di! Tiffin pause hai.',
-        completed: '🏠 Vacation khatam. Welcome back! Tiffin resume ho gaya.',
-        cancelled: '❌ Admin ne aapki vacation cancel kar di.',
+        active: '✅ Admin approved your vacation! Your tiffin is now paused.',
+        completed: '🏠 Vacation ended. Welcome back! Your tiffin has resumed.',
+        cancelled: '❌ Admin cancelled your vacation request.',
       };
       if (statusMessages[data.status]) {
         Alert.alert('Vacation Update', statusMessages[data.status]);
@@ -201,8 +202,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   // Save address callback
   const handleSaveAddress = async () => {
-    if (!addressHostelState.trim() || !addressRoomState.trim()) {
-      Alert.alert('Details Missing', 'Please enter both Hostel name and Room number.');
+    if (!addressHostelState.trim() || !addressRoomState.trim() || !genderState) {
+      Alert.alert('Details Missing', 'Please enter your Hostel, Room number, and select Gender.');
       return;
     }
     setSavingAddress(true);
@@ -210,13 +211,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       const { data } = await api.put('/auth/profile', {
         addressLine: addressHostelState.trim(),
         city: addressRoomState.trim(),
-        phone: deliveryPhoneState.trim()
+        phone: deliveryPhoneState.trim(),
+        gender: genderState
       });
       if (data.success) {
-        Alert.alert('Address Saved!', 'Aapka delivery address update ho gaya hai.');
+        Alert.alert('Address Saved!', 'Your delivery address and details have been updated successfully.');
         user.addressLine = addressHostelState.trim();
         user.city = addressRoomState.trim();
         user.phone = deliveryPhoneState.trim();
+        user.gender = genderState;
         closeModal();
       }
     } catch (err: any) {
@@ -240,14 +243,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         reason,
       });
       if (data.success) {
-        Alert.alert('✅ Vacation Scheduled!', `From ${startDate} to ${endDate}. Admin ko notify kar diya gaya hai.`);
+        Alert.alert('✅ Vacation Scheduled!', `From ${startDate} to ${endDate}. Admin has been notified.`);
         setStartDate('');
         setEndDate('');
         setReason('');
         fetchMyVacations();
       }
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || 'Kuch gadbad ho gayi. Try again.');
+      Alert.alert('Error', err.response?.data?.message || 'Something went wrong. Please try again.');
     } finally {
       setLoadingVacation(false);
     }
@@ -256,7 +259,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const handleCancelVacation = async (requestId: string) => {
     Alert.alert(
       'Cancel Vacation?',
-      'Kya aap ye vacation cancel karna chahte ho?',
+      'Are you sure you want to cancel this vacation request?',
       [
         { text: 'No', style: 'cancel' },
         {
@@ -267,7 +270,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
               const { data } = await api.delete(`/vacation/${requestId}/cancel`);
               if (data.success) {
                 fetchMyVacations();
-                Alert.alert('Cancelled', 'Vacation cancel ho gayi.');
+                Alert.alert('Cancelled', 'Vacation request has been cancelled.');
               }
             } catch (e: any) {
               Alert.alert('Error', e.response?.data?.message || 'Try again');
@@ -304,6 +307,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         setAddressHostelState(user.addressLine || 'BH-3');
         setAddressRoomState(user.city || '');
         setDeliveryPhoneState(user.phone || '');
+        setGenderState(user.gender || 'Male');
         setActiveModal('address');
       }
     },
@@ -738,6 +742,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                     onChangeText={(t) => setDeliveryPhoneState(t.replace(/[^0-9]/g, ''))}
                   />
 
+                  <Text style={styles.addressLabel}>Gender</Text>
+                  <View style={styles.addressPickerRow}>
+                    {['Male', 'Female', 'Other'].map((genderOption) => (
+                      <TouchableOpacity
+                        key={genderOption}
+                        style={[
+                          styles.addressPickerChip,
+                          genderState === genderOption && styles.addressPickerChipSelected
+                        ]}
+                        onPress={() => setGenderState(genderOption)}
+                      >
+                        <Text style={[
+                          styles.addressPickerChipText,
+                          genderState === genderOption && styles.addressPickerChipTextSelected
+                        ]}>
+                          {genderOption}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
                   <View style={{ height: Spacing.lg }} />
 
                   <TouchableOpacity
@@ -992,18 +1017,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   <Text style={styles.faqHeader}>Frequently Asked Questions (FAQs)</Text>
                   
                   <View style={styles.faqItem}>
-                    <Text style={styles.faqQuestion}>Q: Tiffin delivery ka timing kya hai?</Text>
-                    <Text style={styles.faqAnswer}>A: Lunch delivery dopahar 12:00 PM se 2:00 PM tak hoti hai. Dinner delivery shaam 7:30 PM se 9:30 PM tak hoti hai.</Text>
+                    <Text style={styles.faqQuestion}>Q: What are the tiffin delivery timings?</Text>
+                    <Text style={styles.faqAnswer}>A: Lunch is delivered between 12:00 PM and 2:00 PM. Dinner is delivered between 7:30 PM and 9:30 PM.</Text>
                   </View>
 
                   <View style={styles.faqItem}>
-                    <Text style={styles.faqQuestion}>Q: Kya main daily meal pause kar sakta hoon?</Text>
-                    <Text style={styles.faqAnswer}>A: Haan! Aap 'Vacation Mode' use karke select dates ke liye tiffin pause kar sakte hain. Aapka balance save rahega.</Text>
+                    <Text style={styles.faqQuestion}>Q: Can I pause my daily tiffin subscription?</Text>
+                    <Text style={styles.faqAnswer}>A: Yes! You can use 'Vacation Mode' to pause your tiffin delivery for specific dates. Your wallet balance will remain safe.</Text>
                   </View>
 
                   <View style={styles.faqItem}>
-                    <Text style={styles.faqQuestion}>Q: Wallet recharge fail hone par kya karein?</Text>
-                    <Text style={styles.faqAnswer}>A: Agar payment complete ho gayi hai aur wallet update nahi hua, toh correct UTR reference code ke saath support section mein screenshot submit karein.</Text>
+                    <Text style={styles.faqQuestion}>Q: What should I do if my wallet recharge fails?</Text>
+                    <Text style={styles.faqAnswer}>A: If your payment was successful but the wallet did not update, please submit the correct UTR transaction code in the recharge section or contact support.</Text>
                   </View>
 
                   <Text style={styles.faqHeader}>Contact Customer Support</Text>

@@ -54,7 +54,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   const handleSendOTP = async () => {
     if (phone.length !== 10) {
-      setError('Kripya 10-digit mobile number enter karein');
+      setError('Please enter a 10-digit mobile number');
       return;
     }
     
@@ -67,14 +67,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         setReceivedOtp(data.otp);
         Alert.alert(
           '🔑 Test Mode OTP Code',
-          `Aapka sandbox verification code (OTP) hai: ${data.otp}\n\n(Aap is OTP ko use karke verification details verify kar sakte hain)`,
+          `Your sandbox verification code (OTP) is: ${data.otp}\n\n(You can use this OTP to complete the verification details)`,
           [{ text: 'Copy & Continue', onPress: () => setStage('otp') }]
         );
       } else {
-        setError(data.message || 'OTP send karne me error aayi.');
+        setError(data.message || 'Failed to send OTP.');
       }
     } catch (e: any) {
-      setError(e.response?.data?.message || 'OTP send karne me error aayi.');
+      setError(e.response?.data?.message || 'Failed to send OTP.');
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
-      setError('Kripya 6-digit verification code enter karein');
+      setError('Please enter the 6-digit verification code');
       return;
     }
 
@@ -96,13 +96,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
         if (data.user.role === 'student') {
           onLogin(data.user, data.token, data.isNewUser);
         } else {
-          setError('Sirf student accounts login kar sakte hain.');
+          setError('Only student accounts are allowed to log in.');
         }
       } else {
         setError(data.message || 'OTP verification failed.');
       }
     } catch (e: any) {
-      setError(e.response?.data?.message || 'Incorrect OTP code. Kripya verification check karein.');
+      setError(e.response?.data?.message || 'Incorrect OTP code. Please check your verification code.');
     } finally {
       setLoading(false);
     }

@@ -322,7 +322,7 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const fieldsToUpdate = ['name', 'email', 'phone', 'plan', 'vehicle', 'riderPin', 'isOnline', 'walletBalance', 'isOnVacation'];
+    const fieldsToUpdate = ['name', 'email', 'phone', 'plan', 'vehicle', 'riderPin', 'isOnline', 'walletBalance', 'isOnVacation', 'gender', 'addressLine', 'city', 'state', 'pincode'];
     fieldsToUpdate.forEach(field => {
       if (req.body[field] !== undefined) {
         user[field] = req.body[field];

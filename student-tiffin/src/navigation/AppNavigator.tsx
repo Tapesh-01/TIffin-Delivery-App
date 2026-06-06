@@ -48,6 +48,7 @@ export interface User {
   city?: string;
   state?: string;
   pincode?: string;
+  gender?: string;
   latitude?: number;
   longitude?: number;
   referredBy?: string | null;
@@ -150,7 +151,18 @@ const AppNavigatorComponent: React.FC = () => {
           setUser(data.user);
           fetchUserTransactions(data.user.id);
           setupSocket(data.user.id);
-          setCurrentScreen('home');
+          
+          const needsProfileSetup = 
+            data.user.name === 'New Student' || 
+            !data.user.addressLine || 
+            !data.user.city || 
+            !data.user.gender;
+
+          if (needsProfileSetup) {
+            setCurrentScreen('name_setup');
+          } else {
+            setCurrentScreen('home');
+          }
           syncPushToken();
         }
       }
@@ -201,7 +213,19 @@ const AppNavigatorComponent: React.FC = () => {
     setUser(userData);
     fetchUserTransactions(userData.id);
     setupSocket(userData.id);
-    navigate('home');
+
+    const needsProfileSetup = 
+      isNewUser || 
+      userData.name === 'New Student' || 
+      !userData.addressLine || 
+      !userData.city || 
+      !userData.gender;
+
+    if (needsProfileSetup) {
+      navigate('name_setup');
+    } else {
+      navigate('home');
+    }
     syncPushToken();
   };
 
@@ -242,7 +266,7 @@ const AppNavigatorComponent: React.FC = () => {
     if (user.walletBalance < requiredBalance) {
       Alert.alert(
         'Insufficient Balance',
-        `Apke wallet me ₹${requiredBalance} nahi hai (Current Balance: ₹${user.walletBalance}). Subscription ke liye kripya wallet recharge karein.`,
+        `Your wallet balance is insufficient (Current Balance: ₹${user.walletBalance}, Required: ₹${requiredBalance}). Please recharge your wallet to subscribe.`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Recharge Now 💰', onPress: () => navigate('wallet') }

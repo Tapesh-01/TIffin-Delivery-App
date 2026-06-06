@@ -457,7 +457,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
         (error) => {
           setFetchingGps(false);
           console.error('Error getting location: ', error);
-          Alert.alert('GPS Error', 'Aapka live location check nahi kiya ja saka. Kripya permissions check karein ya manually enter karein.');
+          Alert.alert('GPS Error', 'Your live location could not be determined. Please check your GPS permissions or enter your address manually.');
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
@@ -853,7 +853,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
 
     if (paymentMode === 'Wallet') {
       if (user.walletBalance < grandTotal) {
-        Alert.alert('Insufficient Balance', 'Wallet me balance kam hai. Kripya dusra payment method select karein.');
+        Alert.alert('Insufficient Balance', 'Your wallet balance is insufficient. Please choose another payment method or recharge your wallet.');
         return;
       }
       await completeOrderInsertion('Wallet');

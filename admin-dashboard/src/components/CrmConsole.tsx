@@ -18,6 +18,7 @@ interface StudentProfile {
   city?: string;
   state?: string;
   pincode?: string;
+  gender?: string;
   addressHostel?: string;
   address_hostel?: string;
   addressRoom?: string;
@@ -102,7 +103,23 @@ export const CrmConsole: React.FC<CrmConsoleProps> = ({
           <tbody>
             {filteredStudents.map((profile) => (
               <tr key={profile._id || profile.id}>
-                <td style={{ fontWeight: 600 }}>{profile.name || 'Student User'}</td>
+                <td style={{ fontWeight: 600 }}>
+                  <div>{profile.name || 'Student User'}</div>
+                  {profile.gender && (
+                    <span className="gender-badge" style={{ 
+                       fontSize: '11px', 
+                       fontWeight: 500, 
+                       backgroundColor: profile.gender === 'Male' ? '#EFF6FF' : (profile.gender === 'Female' ? '#FDF2F8' : '#F3F4F6'),
+                       color: profile.gender === 'Male' ? '#1D4ED8' : (profile.gender === 'Female' ? '#BE185D' : '#374151'),
+                       padding: '2px 6px',
+                       borderRadius: '4px',
+                       marginTop: '4px',
+                       display: 'inline-block'
+                    }}>
+                      {profile.gender === 'Male' ? '🙋‍♂️ Male' : (profile.gender === 'Female' ? '🙋‍♀️ Female' : '👤 Other')}
+                    </span>
+                  )}
+                </td>
                 <td style={{ color: 'var(--text-secondary)' }}>{profile.email || profile.phone || 'N/A'}</td>
                 <td style={{ fontSize: '13px' }}>
                   {profile.addressLine 

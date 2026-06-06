@@ -27,16 +27,22 @@ interface NameSetupScreenProps {
 
 export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComplete }) => {
   const [name, setName] = useState(user.name && user.name !== 'New Student' ? user.name : '');
+  const [gender, setGender] = useState(user.gender || '');
   const [addressLine, setAddressLine] = useState(user.addressLine || '');
   const [city, setCity] = useState(user.city || '');
   const [state, setState] = useState(user.state || '');
   const [pincode, setPincode] = useState(user.pincode || '');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSave = async () => {
     if (!name.trim()) {
       setError('Please enter your name');
+      return;
+    }
+    if (!gender) {
+      setError('Please select your gender');
       return;
     }
     if (!addressLine.trim()) {
@@ -60,13 +66,20 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
     setLoading(true);
 
     try {
-      const { data } = await api.put('/auth/profile', {
+      const payload: any = {
         name: name.trim(),
         addressLine: addressLine.trim(),
         city: city.trim(),
         state: state.trim(),
         pincode: pincode.trim(),
-      });
+        gender: gender,
+      };
+
+      if (referralCode.trim()) {
+        payload.referralCode = referralCode.trim();
+      }
+
+      const { data } = await api.put('/auth/profile', payload);
       if (data.success) {
         onComplete(data.user);
       } else {
@@ -81,6 +94,7 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
 
   const isFormValid =
     name.trim().length > 0 &&
+    gender !== '' &&
     addressLine.trim().length > 0 &&
     city.trim().length > 0 &&
     state.trim().length > 0 &&
@@ -130,6 +144,36 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
 
           <View style={{ height: Spacing.md }} />
 
+          {/* Gender Selector */}
+          <Text style={styles.inputLabel}>Gender</Text>
+          <View style={styles.genderRow}>
+            {['Male', 'Female', 'Other'].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.genderChip,
+                  gender === option && styles.genderChipSelected,
+                ]}
+                onPress={() => setGender(option)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.genderText,
+                    gender === option && styles.genderTextSelected,
+                  ]}
+                >
+                  {option === 'Male' && '🙋‍♂️ '}
+                  {option === 'Female' && '🙋‍♀️ '}
+                  {option === 'Other' && '👤 '}
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={{ height: Spacing.md }} />
+
           {/* Enter Delivery Address Section Header */}
           <Text style={styles.sectionHeader}>Enter Delivery Address</Text>
 
@@ -157,7 +201,7 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
                 <Text style={styles.inputIcon}>🏙️</Text>
                 <TextInput
                   style={styles.inputField}
-                  placeholder=" Raipur"
+                  placeholder="Raipur"
                   placeholderTextColor={Colors.textMuted}
                   value={city}
                   onChangeText={setCity}
@@ -172,7 +216,7 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
                 <Text style={styles.inputIcon}>🗺️</Text>
                 <TextInput
                   style={styles.inputField}
-                  placeholder=" Chhattisgarh"
+                  placeholder="Chhattisgarh"
                   placeholderTextColor={Colors.textMuted}
                   value={state}
                   onChangeText={setState}
@@ -196,6 +240,23 @@ export const NameSetupScreen: React.FC<NameSetupScreenProps> = ({ user, onComple
               value={pincode}
               onChangeText={(text) => setPincode(text.replace(/[^0-9]/g, ''))}
               maxLength={6}
+            />
+          </View>
+
+          <View style={{ height: Spacing.md }} />
+
+          {/* Referral Code (Optional) */}
+          <Text style={styles.inputLabel}>Referral Code (Optional)</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputIcon}>🎁</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="e.g. TIFFIN1234 (Get ₹50 free bonus)"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="characters"
+              value={referralCode}
+              onChangeText={setReferralCode}
+              maxLength={15}
             />
           </View>
 
@@ -224,7 +285,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    height: height * 0.35,
+    height: height * 0.28,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -232,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mascot: {
-    fontSize: 56,
+    fontSize: 48,
     marginBottom: 8,
   },
   brandName: {
@@ -307,6 +368,34 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
+  },
+  genderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  genderChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.background,
+  },
+  genderChipSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '10',
+  },
+  genderText: {
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  genderTextSelected: {
+    color: Colors.primary,
   },
   inputRow: {
     flexDirection: 'row',
