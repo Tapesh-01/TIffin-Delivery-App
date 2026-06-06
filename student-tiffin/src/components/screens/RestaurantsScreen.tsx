@@ -508,6 +508,29 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   const [reviewSlideAnim] = useState(new Animated.Value(800));
   const [reviewBackdropOpacity] = useState(new Animated.Value(0));
 
+  const [successScale] = useState(new Animated.Value(0.3));
+  const [successOpacity] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    if (checkoutStep === 'success') {
+      successScale.setValue(0.3);
+      successOpacity.setValue(0);
+      Animated.parallel([
+        Animated.spring(successScale, {
+          toValue: 1,
+          friction: 5,
+          tension: 40,
+          useNativeDriver: Platform.OS !== 'web'
+        }),
+        Animated.timing(successOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: Platform.OS !== 'web'
+        })
+      ]).start();
+    }
+  }, [checkoutStep]);
+
   // Trigger animations when Selected Menu Item changes
   useEffect(() => {
     if (selectedMenuItem) {
@@ -950,22 +973,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
       });
 
       if (data.success) {
-        Alert.alert(
-          'Order Placed!',
-          mode === 'Online'
-            ? `Your payment of ₹${grandTotal} with UTR: ${utrCode} has been submitted for admin approval. Your order is cooking!`
-            : (mode === 'Wallet'
-              ? `₹${grandTotal} has been debited from your wallet. Your order is cooking!`
-              : `Your order is placed! Please keep ₹${grandTotal} ready in cash for delivery.`)
-        );
-
-        setCart({});
-        setActiveRestaurant(null);
-        handleCloseMenu();
-        setCheckoutStep('idle');
-        setUtrCode('');
-        setOrderAddons([]); // Clear addons
-        navigate('tracking');
+        setCheckoutStep('success');
       }
     } catch (e: any) {
       console.error('Order checkout error:', e);
@@ -1759,6 +1767,46 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
               <View style={styles.loadingSheetContainer}>
                 <ActivityIndicator size="large" color={Colors.primary} />
                 <Text style={styles.loadingText}>Processing Payment & Confirming Order...</Text>
+              </View>
+            )}
+
+            {/* Step 6: Order Success Confirmation Screen */}
+            {checkoutStep === 'success' && (
+              <View style={styles.successSheetContainer}>
+                <Animated.View style={[styles.successAnimCircle, { opacity: successOpacity, transform: [{ scale: successScale }] }]}>
+                  <Text style={styles.successEmoji}>🎉</Text>
+                  <View style={styles.successCheckmarkWrapper}>
+                    <Text style={styles.successCheckmark}>✓</Text>
+                  </View>
+                </Animated.View>
+                
+                <Text style={styles.successTitle}>Congratulations!</Text>
+                <Text style={styles.successSubtitle}>Your Order Has Been Placed!</Text>
+                <Text style={styles.successText}>
+                  Your delicious hot meal is being prepared by our kitchen team and will be delivered to your room shortly.
+                </Text>
+
+                <TouchableOpacity 
+                  style={styles.successActionBtn}
+                  onPress={() => {
+                    setCart({});
+                    setActiveRestaurant(null);
+                    handleCloseMenu();
+                    setCheckoutStep('idle');
+                    setUtrCode('');
+                    setOrderAddons([]); // Clear addons
+                    navigate('tracking');
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#FF6B35', '#FF1744']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.successActionGrad}
+                  >
+                    <Text style={styles.successActionText}>Track Your Order 🛵</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -3987,5 +4035,85 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.regular,
     color: '#94A3B8',
     marginTop: 2,
+  },
+
+  // Success Confirmation Styles
+  successSheetContainer: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xl,
+  },
+  successAnimCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    position: 'relative',
+  },
+  successEmoji: {
+    fontSize: 54,
+  },
+  successCheckmarkWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#22C55E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#FAFAFA',
+  },
+  successCheckmark: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  successTitle: {
+    fontFamily: Typography.fontFamily.bold,
+    fontSize: 28,
+    color: '#1E293B',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
+    color: '#22C55E',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  successText: {
+    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.sm,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 36,
+    paddingHorizontal: 16,
+  },
+  successActionBtn: {
+    width: '90%',
+    borderRadius: Radius.full,
+    overflow: 'hidden',
+    ...Shadows.card,
+  },
+  successActionGrad: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successActionText: {
+    fontFamily: Typography.fontFamily.bold,
+    fontSize: Typography.fontSize.sm,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 });
