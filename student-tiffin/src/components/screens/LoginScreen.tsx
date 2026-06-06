@@ -25,10 +25,6 @@ import { Button } from '../ui/Button';
 import { User } from '../../navigation/AppNavigator';
 import { api } from '../../lib/api';
 
-// Firebase Imports
-import { signInWithPhoneNumber } from 'firebase/auth';
-import { auth, isFirebaseConfigured, createRecaptchaVerifier } from '../../lib/firebase';
-
 const { height } = Dimensions.get('window');
 
 interface LoginScreenProps {
@@ -42,7 +38,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [stage, setStage] = useState<'phone' | 'otp'>('phone');
   const [otp, setOtp] = useState('');
   const [receivedOtp, setReceivedOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   const cardY = useSharedValue(50);
   const cardOpacity = useSharedValue(0);
@@ -66,32 +61,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setError('');
     setLoading(true);
 
-    // 1. Firebase Phone Auth integration (Real production SMS flow)
-    if (isFirebaseConfigured && auth) {
-      try {
-        const formattedPhone = `+91${phone}`;
-        let verifier = null;
-        
-        if (Platform.OS === 'web') {
-          verifier = createRecaptchaVerifier(auth, 'recaptcha-container');
-          if (!verifier) {
-            throw new Error('Verification system could not be initialized.');
-          }
-        }
-        
-        const result = await signInWithPhoneNumber(auth, formattedPhone, verifier as any);
-        setConfirmationResult(result);
-        setStage('otp');
-      } catch (err: any) {
-        console.error('Firebase Auth SMS send error:', err);
-        setError(err.message || 'OTP send karne me error aayi. Try again.');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // 2. Sandbox OTP Mock/Simulated Flow (Zero-setup local testing)
     try {
       const { data } = await api.post('/auth/send-otp', { phone });
       if (data.success) {
@@ -120,33 +89,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     setError('');
     setLoading(true);
 
-    // 1. Verify code using real Firebase Auth credentials
-    if (isFirebaseConfigured && confirmationResult) {
-      try {
-        const userCredential = await confirmationResult.confirm(otp);
-        const idToken = await userCredential.user.getIdToken();
-        
-        const { data } = await api.post('/auth/firebase-login', { idToken, phone });
-        
-        if (data.success) {
-          if (data.user.role === 'student') {
-            onLogin(data.user, data.token, data.isNewUser);
-          } else {
-            setError('Sirf student accounts login kar sakte hain.');
-          }
-        } else {
-          setError(data.message || 'Firebase login verification failed.');
-        }
-      } catch (err: any) {
-        console.error('Firebase Auth verify error:', err);
-        setError('Incorrect verification code. Kripya check karein.');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // 2. Sandbox OTP verification fallback
     try {
       const { data } = await api.post('/auth/phone-login', { phone, otp });
       
@@ -198,8 +140,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               <View>
                 <Text style={styles.cardTitle}>Welcome Back! 👋</Text>
                 <Text style={styles.cardSubtitle}>
-                  Enter your mobile number to get started
-                  {isFirebaseConfigured && <Text style={{ color: '#10B981', fontWeight: 'bold' }}> (Firebase Enabled)</Text>}
+                  Enter your mobile number to get started (Sandbox Mode)
                 </Text>
 
                 {/* Phone Input */}
