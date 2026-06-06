@@ -8,6 +8,7 @@ import { socket } from '../lib/socket';
 import { AppConfig } from '../constants/appConfig';
 
 import { registerForPushNotificationsAsync } from '../lib/notifications';
+import { CustomAlertProvider, showAlert } from '../components/CustomAlert';
 
 // Screens
 import { LoginScreen } from '../components/screens/LoginScreen';
@@ -125,6 +126,19 @@ const AppNavigatorComponent: React.FC = () => {
   useEffect(() => {
     initDiagnostics();
     checkAuthStatus();
+  }, []);
+
+  // Override standard React Native Alert.alert globally with our custom alert UI
+  useEffect(() => {
+    Alert.alert = (title, message, buttons) => {
+      const customButtons = buttons?.map(btn => ({
+        text: btn.text || 'OK',
+        style: btn.style === 'cancel' ? 'cancel' as const : (btn.style === 'destructive' ? 'destructive' as const : 'default' as const),
+        onPress: btn.onPress
+      })) || [];
+
+      showAlert(title, message || '', customButtons);
+    };
   }, []);
 
   const checkAuthStatus = async () => {
@@ -256,63 +270,73 @@ const AppNavigatorComponent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
+      <CustomAlertProvider>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </CustomAlertProvider>
     );
   }
 
-  if (currentScreen === 'login' || !user) {
-    return <LoginScreen onLogin={handleLogin} />;
-  }
+  const renderContent = () => {
+    if (currentScreen === 'login' || !user) {
+      return <LoginScreen onLogin={handleLogin} />;
+    }
 
-  switch (currentScreen) {
-    case 'home':
-      return <HomeScreen user={user} navigate={navigate} />;
-    case 'menu':
-      return <WeeklyMenuScreen navigate={navigate} />;
-    case 'subscription':
-      return <SubscriptionScreen currentPlan={user.plan} navigate={navigate} onSubscribe={handleSubscribe} />;
-    case 'tracking':
-      return <OrderTrackingScreen navigate={navigate} userName={user.name} />;
-    case 'wallet':
-      return <WalletScreen user={user} navigate={navigate} onRecharge={handleRecharge} transactions={userTransactions} />;
-    case 'profile':
-      return (
-        <ProfileScreen
-          user={user}
-          navigate={navigate}
-          onLogout={handleLogout}
-          cart={cart}
-          setCart={setCart}
-          activeRestaurant={activeRestaurant}
-          checkoutStep={checkoutStep}
-          setCheckoutStep={setCheckoutStep}
-        />
-      );
-    case 'vacation':
-      return <VacationModeScreen navigate={navigate} user={user} />;
-    case 'feed':
-      return <CommunityFeedScreen navigate={navigate} userName={user.name} />;
-    case 'restaurants':
-      return (
-        <RestaurantsScreen
-          navigate={navigate}
-          user={user}
-          setUser={setUser}
-          cart={cart}
-          setCart={setCart}
-          activeRestaurant={activeRestaurant}
-          setActiveRestaurant={setActiveRestaurant}
-          checkoutStep={checkoutStep}
-          setCheckoutStep={setCheckoutStep}
-        />
-      );
-    case 'name_setup':
-      return <NameSetupScreen user={user} onComplete={handleNameSetupComplete} />;
-    default:
-      return <HomeScreen user={user} navigate={navigate} />;
-  }
+    switch (currentScreen) {
+      case 'home':
+        return <HomeScreen user={user} navigate={navigate} />;
+      case 'menu':
+        return <WeeklyMenuScreen navigate={navigate} />;
+      case 'subscription':
+        return <SubscriptionScreen currentPlan={user.plan} navigate={navigate} onSubscribe={handleSubscribe} />;
+      case 'tracking':
+        return <OrderTrackingScreen navigate={navigate} userName={user.name} />;
+      case 'wallet':
+        return <WalletScreen user={user} navigate={navigate} onRecharge={handleRecharge} transactions={userTransactions} />;
+      case 'profile':
+        return (
+          <ProfileScreen
+            user={user}
+            navigate={navigate}
+            onLogout={handleLogout}
+            cart={cart}
+            setCart={setCart}
+            activeRestaurant={activeRestaurant}
+            checkoutStep={checkoutStep}
+            setCheckoutStep={setCheckoutStep}
+          />
+        );
+      case 'vacation':
+        return <VacationModeScreen navigate={navigate} user={user} />;
+      case 'feed':
+        return <CommunityFeedScreen navigate={navigate} userName={user.name} />;
+      case 'restaurants':
+        return (
+          <RestaurantsScreen
+            navigate={navigate}
+            user={user}
+            setUser={setUser}
+            cart={cart}
+            setCart={setCart}
+            activeRestaurant={activeRestaurant}
+            setActiveRestaurant={setActiveRestaurant}
+            checkoutStep={checkoutStep}
+            setCheckoutStep={setCheckoutStep}
+          />
+        );
+      case 'name_setup':
+        return <NameSetupScreen user={user} onComplete={handleNameSetupComplete} />;
+      default:
+        return <HomeScreen user={user} navigate={navigate} />;
+    }
+  };
+
+  return (
+    <CustomAlertProvider>
+      {renderContent()}
+    </CustomAlertProvider>
+  );
 };
 
 const styles = StyleSheet.create({

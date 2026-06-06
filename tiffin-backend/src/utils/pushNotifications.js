@@ -17,6 +17,7 @@ exports.sendPushNotification = (pushToken, title, body, data = {}) => {
     const payload = JSON.stringify({
       to: pushToken,
       sound: 'default',
+      channelId: 'default',
       title,
       body,
       data
