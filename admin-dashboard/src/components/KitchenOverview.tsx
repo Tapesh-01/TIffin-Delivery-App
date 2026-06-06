@@ -483,8 +483,8 @@ export const KitchenOverview: React.FC<KitchenOverviewProps> = ({
                                 }));
                               }}
                               style={{
-                                backgroundColor: 'rgba(255,255,255,0.08)',
-                                border: '1px solid rgba(255,255,255,0.15)',
+                                backgroundColor: 'var(--bg-primary)',
+                                border: '1px solid var(--border)',
                                 color: 'var(--text-primary)',
                                 borderRadius: '6px',
                                 padding: '4px 8px',
@@ -495,9 +495,9 @@ export const KitchenOverview: React.FC<KitchenOverviewProps> = ({
                                 cursor: 'pointer'
                               }}
                             >
-                              <option value="" style={{ background: '#1e293b' }}>-- Select Rider --</option>
+                              <option value="" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>-- Select Rider --</option>
                               {riders.map(r => (
-                                <option key={r._id || r.id} value={r._id || r.id} style={{ background: '#1e293b' }}>
+                                <option key={r._id || r.id} value={r._id || r.id} style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
                                   {r.name} {r.isOnline ? '🟢' : '⚫'}
                                 </option>
                               ))}
