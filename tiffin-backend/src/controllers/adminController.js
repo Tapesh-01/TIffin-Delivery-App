@@ -322,10 +322,31 @@ exports.updateUserProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Uniqueness check for email
+    if (req.body.email && req.body.email.trim() !== '' && req.body.email !== user.email) {
+      const emailExists = await User.findOne({ email: req.body.email });
+      if (emailExists) {
+        return res.status(400).json({ success: false, message: 'Email already registered' });
+      }
+    }
+
+    // Uniqueness check for phone
+    if (req.body.phone && req.body.phone.trim() !== '' && req.body.phone !== user.phone) {
+      const phoneExists = await User.findOne({ phone: req.body.phone });
+      if (phoneExists) {
+        return res.status(400).json({ success: false, message: 'Phone number already registered' });
+      }
+    }
+
     const fieldsToUpdate = ['name', 'email', 'phone', 'plan', 'vehicle', 'riderPin', 'isOnline', 'walletBalance', 'isOnVacation', 'gender', 'addressLine', 'city', 'state', 'pincode'];
     fieldsToUpdate.forEach(field => {
       if (req.body[field] !== undefined) {
-        user[field] = req.body[field];
+        // Prevent duplicate empty strings on unique sparse indexes
+        if ((field === 'phone' || field === 'email') && (req.body[field] === '' || req.body[field] === null)) {
+          user[field] = undefined;
+        } else {
+          user[field] = req.body[field];
+        }
       }
     });
 
