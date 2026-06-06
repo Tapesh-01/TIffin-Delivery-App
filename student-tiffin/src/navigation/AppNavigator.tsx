@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Alert, ActivityIndicator, BackHandler } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initDiagnostics, wrapWithDiagnostics } from '../lib/diagnostics';
 import { Colors } from '../constants/colors';
@@ -63,6 +63,7 @@ const AppNavigatorComponent: React.FC = () => {
   const [activeRestaurant, setActiveRestaurant] = useState<any>(null);
 
   const [checkoutStep, setCheckoutStep] = useState<'idle' | 'address' | 'payment' | 'scanning' | 'confirming'>('idle');
+  const [history, setHistory] = useState<Screen[]>(['login']);
 
   // Load persisted cart on mount
   useEffect(() => {
@@ -100,7 +101,19 @@ const AppNavigatorComponent: React.FC = () => {
     saveCartData();
   }, [cart, activeRestaurant]);
 
-  const navigate = (screen: Screen) => setCurrentScreen(screen);
+  const navigate = (screen: Screen) => {
+    if (screen === 'home') {
+      setHistory(['home']);
+    } else if (screen === 'login') {
+      setHistory(['login']);
+    } else {
+      setHistory(prev => {
+        if (prev[prev.length - 1] === screen) return prev;
+        return [...prev, screen];
+      });
+    }
+    setCurrentScreen(screen);
+  };
 
   // Sync screen changes to browser URL bar (Expo Web preview helper)
   useEffect(() => {
@@ -128,6 +141,29 @@ const AppNavigatorComponent: React.FC = () => {
     initDiagnostics();
     checkAuthStatus();
   }, []);
+
+  // Hardware back button stack navigation handler (Android gesture)
+  useEffect(() => {
+    const handleBackPress = () => {
+      // Exit app if on login or home, and history is cleared
+      if (currentScreen === 'login' || currentScreen === 'home' || history.length <= 1) {
+        return false; // default behavior (exits app)
+      }
+
+      // Pop from custom navigation history stack
+      setHistory(prev => {
+        const next = [...prev];
+        next.pop(); // remove current screen
+        const prevScreen = next[next.length - 1] || 'home';
+        setCurrentScreen(prevScreen);
+        return next;
+      });
+      return true; // prevent default behavior (stay in app)
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+    return () => backHandler.remove();
+  }, [currentScreen, history]);
 
   // Override standard React Native Alert.alert globally with our custom alert UI
   useEffect(() => {
