@@ -671,46 +671,52 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
 
   const handleCustomAddToCart = () => {
     if (!customizingItem) return;
-    setCart(prev => ({ ...prev, [customizingItem.id]: tempQty }));
-    setOrderAddons(prev => {
-      const formattedSelected = Object.entries(selectedAddons)
-        .filter(([_, qty]) => qty > 0)
-        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
-      const merged = [...prev, ...formattedSelected];
-      return Array.from(new Set(merged));
-    });
-    closeCustomizingOverlay(() => {
-      Alert.alert('🛒 Item Added', `${customizingItem.name} added to cart!`);
+    checkAndReplaceCart(() => {
+      setCart(prev => ({ ...prev, [customizingItem.id]: tempQty }));
+      setOrderAddons(prev => {
+        const formattedSelected = Object.entries(selectedAddons)
+          .filter(([_, qty]) => qty > 0)
+          .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+        const merged = [...prev, ...formattedSelected];
+        return Array.from(new Set(merged));
+      });
+      closeCustomizingOverlay(() => {
+        Alert.alert('🛒 Item Added', `${customizingItem.name} added to cart!`);
+      });
     });
   };
 
   const handleAddToCart = () => {
     if (!selectedMenuItem) return;
-    setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
-    setOrderAddons(prev => {
-      const formattedSelected = Object.entries(selectedAddons)
-        .filter(([_, qty]) => qty > 0)
-        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
-      const merged = [...prev, ...formattedSelected];
-      return Array.from(new Set(merged));
-    });
-    closeDetailOverlay(() => {
-      Alert.alert('🛒 Item Added', `${selectedMenuItem.name} added to cart!`);
+    checkAndReplaceCart(() => {
+      setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
+      setOrderAddons(prev => {
+        const formattedSelected = Object.entries(selectedAddons)
+          .filter(([_, qty]) => qty > 0)
+          .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+        const merged = [...prev, ...formattedSelected];
+        return Array.from(new Set(merged));
+      });
+      closeDetailOverlay(() => {
+        Alert.alert('🛒 Item Added', `${selectedMenuItem.name} added to cart!`);
+      });
     });
   };
 
   const handleBuyNow = () => {
     if (!selectedMenuItem) return;
-    setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
-    setOrderAddons(prev => {
-      const formattedSelected = Object.entries(selectedAddons)
-        .filter(([_, qty]) => qty > 0)
-        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
-      const merged = [...prev, ...formattedSelected];
-      return Array.from(new Set(merged));
-    });
-    closeDetailOverlay(() => {
-      setCheckoutStep('address');
+    checkAndReplaceCart(() => {
+      setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
+      setOrderAddons(prev => {
+        const formattedSelected = Object.entries(selectedAddons)
+          .filter(([_, qty]) => qty > 0)
+          .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+        const merged = [...prev, ...formattedSelected];
+        return Array.from(new Set(merged));
+      });
+      closeDetailOverlay(() => {
+        setCheckoutStep('address');
+      });
     });
   };
 
@@ -774,26 +780,9 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   });
 
   const handleOpenMenu = (res: Restaurant) => {
-    if (activeRestaurant && activeRestaurant.id !== res.id && Object.keys(cart).length > 0) {
-      Alert.alert(
-        'Replace Cart?',
-        'Aapke cart me dusre restaurant ke items hain. Kya aap cart clear karke is restaurant ka menu dekhna chahte hain?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Clear & Open',
-            style: 'destructive',
-            onPress: () => {
-              setCart({});
-              setActiveRestaurant(res);
-              setViewingRestaurant(res);
-            }
-          }
-        ]
-      );
-      return;
+    if (Object.keys(cart).length === 0) {
+      setActiveRestaurant(res);
     }
-    setActiveRestaurant(res);
     setViewingRestaurant(res);
   };
 
@@ -844,12 +833,53 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     return () => subscription.remove();
   }, [customizingItem, activeReviewItem, selectedMenuItem, checkoutStep, viewingRestaurant]);
 
+  const checkAndReplaceCart = (onConfirm: () => void) => {
+    if (activeRestaurant && viewingRestaurant && activeRestaurant.id !== viewingRestaurant.id && Object.keys(cart).length > 0) {
+      Alert.alert(
+        'Replace Cart?',
+        'Aapke cart me dusre restaurant ke items hain. Kya aap cart clear karke is restaurant se item add karna chahte hain?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Clear & Add',
+            style: 'destructive',
+            onPress: () => {
+              setCart({});
+              setActiveRestaurant(viewingRestaurant);
+              onConfirm();
+            }
+          }
+        ]
+      );
+      return false;
+    }
+    if (Object.keys(cart).length === 0 && viewingRestaurant) {
+      setActiveRestaurant(viewingRestaurant);
+    }
+    onConfirm();
+    return true;
+  };
+
   const updateCartQty = (itemId: string, diff: number) => {
-    setCart((prev) => {
-      const current = prev[itemId] || 0;
-      const next = Math.max(0, current + diff);
-      return { ...prev, [itemId]: next };
-    });
+    if (diff > 0) {
+      checkAndReplaceCart(() => {
+        setCart((prev) => {
+          const current = prev[itemId] || 0;
+          const next = Math.max(0, current + diff);
+          return { ...prev, [itemId]: next };
+        });
+      });
+    } else {
+      setCart((prev) => {
+        const current = prev[itemId] || 0;
+        const next = Math.max(0, current + diff);
+        const updatedCart = { ...prev, [itemId]: next };
+        if (next === 0) {
+          delete updatedCart[itemId];
+        }
+        return updatedCart;
+      });
+    }
   };
 
   // Calculations
