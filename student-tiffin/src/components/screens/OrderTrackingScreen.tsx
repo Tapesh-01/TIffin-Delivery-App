@@ -95,6 +95,26 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
   const [orderPlanType, setOrderPlanType] = useState<string>('standard');
   const progressAnim = useRef(new Animated.Value(0)).current;
 
+  const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const selectedOrderIdRef = useRef<string | null>(null);
+
+  const currentStatusRef = useRef(1);
+  const destinationLatRef = useRef(28.6200);
+  const destinationLngRef = useRef(77.2100);
+
+  useEffect(() => {
+    currentStatusRef.current = currentStatus;
+  }, [currentStatus]);
+
+  useEffect(() => {
+    destinationLatRef.current = destinationLat;
+  }, [destinationLat]);
+
+  useEffect(() => {
+    destinationLngRef.current = destinationLng;
+  }, [destinationLng]);
+
   // Haversine formula helpers
   const getDistanceFromLatLonInKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radius of the earth in km
@@ -123,85 +143,103 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
     return `Delivery in ${padMins}m:${padSecs}s`;
   };
 
+  const syncActiveOrderDetails = (order: any) => {
+    if (!order) return;
+    setDbOrderId(order._id);
+    const formattedId = `tf-${order._id.slice(-5).toLowerCase()}`;
+    setOrderId(formattedId.toUpperCase());
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      window.history.pushState(null, '', `/track-order/${formattedId}`);
+    }
+
+    setDriverName(order.rider?.name || 'Assigning Rider...');
+    setDriverPhone(order.rider?.phone || '');
+    setHostelName(order.profiles?.address_hostel || 'BH-3');
+
+    let dstLat = 28.6200;
+    let dstLng = 77.2100;
+    // Prefer custom coordinates if they were set on the order
+    if (order.latitude !== null && order.latitude !== undefined && order.longitude !== null && order.longitude !== undefined) {
+      setDestinationLat(order.latitude);
+      setDestinationLng(order.longitude);
+      dstLat = order.latitude;
+      dstLng = order.longitude;
+    } else {
+      const staticLoc = HOSTEL_COORDS[order.profiles?.address_hostel || 'BH-3'] || HOSTEL_COORDS['BH-3'];
+      setDestinationLat(staticLoc.lat);
+      setDestinationLng(staticLoc.lng);
+      dstLat = staticLoc.lat;
+      dstLng = staticLoc.lng;
+    }
+
+    if (order.restaurant && order.restaurant.latitude && order.restaurant.longitude) {
+      setRestaurantLat(order.restaurant.latitude);
+      setRestaurantLng(order.restaurant.longitude);
+    } else {
+      setRestaurantLat(28.6139); // central kitchen fallback
+      setRestaurantLng(77.2090);
+    }
+
+    const statusMap: Record<string, number> = {
+      pending: 0,
+      cooking: 0,
+      packed: 1,
+      out_for_delivery: 2,
+      delivered: 3,
+    };
+    const stat = statusMap[order.status] ?? 0;
+    setCurrentStatus(stat);
+    setOrderPlanType(order.restaurant ? `custom:${order.restaurant.name}` : 'standard');
+    setEmptyTiffinCollected(!!order.emptyTiffinCollected);
+
+    // Calculate initial ETA seconds
+    const rLat = order.riderLatitude || order.rider?.latitude || (dstLat - 0.005);
+    const rLng = order.riderLongitude || order.rider?.longitude || (dstLng - 0.003);
+    setTimeLeftSeconds(getETASeconds(stat, dstLat, dstLng, rLat, rLng));
+
+    // Join order room for live GPS tracking updates
+    socket.emit('join_order_room', order._id);
+  };
+
   const fetchLatestOrder = async () => {
     try {
       setLoading(true);
       const { data } = await api.get('/orders/myorders');
       if (data.success && data.data.length > 0) {
-        const order = data.data[0];
+        const filtered = data.data.filter((order: any) => {
+          if (order.status === 'cancelled') return false;
+          const orderDate = new Date(order.updatedAt || order.createdAt);
+          const diffHours = (new Date().getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+          return order.status !== 'delivered' || diffHours < 1.5;
+        });
 
-        // Check if this order is active or recently delivered (last 1.5 hours)
-        const orderDate = new Date(order.updatedAt || order.createdAt);
-        const diffHours = (new Date().getTime() - orderDate.getTime()) / (1000 * 60 * 60);
-        const isActive = order.status !== 'delivered' || diffHours < 1.5;
-
-        if (!isActive) {
+        if (filtered.length === 0) {
           if (isMounted.current) {
             setActiveOrderExists(false);
             setDbOrderId(null);
+            setActiveOrders([]);
           }
           return;
         }
 
         if (!isMounted.current) return;
+        setActiveOrders(filtered);
         setActiveOrderExists(true);
-        setDbOrderId(order._id);
-        const formattedId = `tf-${order._id.slice(-5).toLowerCase()}`;
-        setOrderId(formattedId.toUpperCase());
-        if (typeof window !== 'undefined' && window.history && window.history.pushState) {
-          window.history.pushState(null, '', `/track-order/${formattedId}`);
-        }
-        setDriverName(order.rider?.name || 'Assigning Rider...');
-        setDriverPhone(order.rider?.phone || '');
-        setHostelName(order.profiles?.address_hostel || 'BH-3');
 
-        let dstLat = destinationLat;
-        let dstLng = destinationLng;
-        // Prefer custom coordinates if they were set on the order
-        if (order.latitude !== null && order.latitude !== undefined && order.longitude !== null && order.longitude !== undefined) {
-          setDestinationLat(order.latitude);
-          setDestinationLng(order.longitude);
-          dstLat = order.latitude;
-          dstLng = order.longitude;
-        } else {
-          const staticLoc = HOSTEL_COORDS[order.profiles?.address_hostel || 'BH-3'] || HOSTEL_COORDS['BH-3'];
-          setDestinationLat(staticLoc.lat);
-          setDestinationLng(staticLoc.lng);
-          dstLat = staticLoc.lat;
-          dstLng = staticLoc.lng;
+        // Auto-select first active order if none is selected
+        let selectedId = selectedOrderIdRef.current;
+        if (!selectedId || !filtered.some((o: any) => o._id === selectedId)) {
+          selectedId = filtered[0]._id;
+          setSelectedOrderId(selectedId);
         }
 
-        if (order.restaurant && order.restaurant.latitude && order.restaurant.longitude) {
-          setRestaurantLat(order.restaurant.latitude);
-          setRestaurantLng(order.restaurant.longitude);
-        } else {
-          setRestaurantLat(28.6139); // central kitchen fallback
-          setRestaurantLng(77.2090);
-        }
-
-        // Join order room for live GPS tracking updates
-        socket.emit('join_order_room', order._id);
-        
-        const statusMap: Record<string, number> = {
-          pending: 0,
-          cooking: 0,
-          packed: 1,
-          out_for_delivery: 2,
-          delivered: 3,
-        };
-        const stat = statusMap[order.status] ?? 0;
-        setCurrentStatus(stat);
-        setOrderPlanType(order.restaurant ? `custom:${order.restaurant.name}` : 'standard');
-        setEmptyTiffinCollected(!!order.emptyTiffinCollected);
-
-        // Calculate initial ETA seconds
-        const rLat = order.riderLatitude || order.rider?.latitude || (dstLat - 0.005);
-        const rLng = order.riderLongitude || order.rider?.longitude || (dstLng - 0.003);
-        setTimeLeftSeconds(getETASeconds(stat, dstLat, dstLng, rLat, rLng));
+        const activeOrder = filtered.find((o: any) => o._id === selectedId) || filtered[0];
+        syncActiveOrderDetails(activeOrder);
       } else {
         if (isMounted.current) {
           setActiveOrderExists(false);
           setDbOrderId(null);
+          setActiveOrders([]);
         }
       }
     } catch (error) {
@@ -309,69 +347,27 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
   }, [currentStatus]);
 
   useEffect(() => {
+    selectedOrderIdRef.current = selectedOrderId;
+    const currentSelected = activeOrders.find(o => o._id === selectedOrderId);
+    if (currentSelected) {
+      syncActiveOrderDetails(currentSelected);
+    }
+  }, [selectedOrderId, activeOrders]);
+
+  useEffect(() => {
     fetchLatestOrder();
     checkUserRating();
 
     const onStatusUpdate = (updateData: any) => {
       console.log('Socket Status Update:', updateData);
-      const statusMap: Record<string, number> = {
-        pending: 0,
-        cooking: 0,
-        packed: 1,
-        out_for_delivery: 2,
-        delivered: 3,
-      };
-      if (updateData.status) {
-        const nextStat = statusMap[updateData.status] ?? 0;
-        setCurrentStatus(nextStat);
+      
+      // Update activeOrders list
+      setActiveOrders(prev => {
+        return prev.map(o => o._id === updateData._id ? updateData : o);
+      });
 
-        let dLat = destinationLat;
-        let dLng = destinationLng;
-        if (updateData.latitude !== null && updateData.latitude !== undefined && updateData.longitude !== null && updateData.longitude !== undefined) {
-          dLat = updateData.latitude;
-          dLng = updateData.longitude;
-        }
-
-        let rLat = driverLat;
-        let rLng = driverLng;
-        if (updateData.riderLatitude !== null && updateData.riderLatitude !== undefined) {
-          rLat = updateData.riderLatitude;
-          rLng = updateData.riderLongitude;
-        }
-
-        setTimeLeftSeconds(getETASeconds(nextStat, dLat, dLng, rLat, rLng));
-
-        // Zomato/Swiggy style fallback Web Notifications on Web
-        if (Platform.OS === 'web') {
-          const statusPhrases: Record<string, string> = {
-            cooking: "Aapka tiffin order accept ho gaya hai! Kitchen me fresh preparation shuru ho gayi hai. 👨‍🍳",
-            packed: "Aapka tiffin pack ho chuka hai aur dispatch hone ke liye bilkul tayyar hai. 📦",
-            out_for_delivery: "Aapka tiffin kitchen se dispatch ho gaya hai! Rider hostel ki taraf nikal chuka hai. 🛵",
-            delivered: "Aapka tiffin safely deliver ho gaya hai. Enjoy your hot meal! 🎉"
-          };
-          const phrase = statusPhrases[updateData.status];
-          if (phrase) {
-            showWebNotification("Tiffin Order Status Update 🍱", phrase);
-          }
-        }
-      }
-      if (updateData.emptyTiffinCollected !== undefined) {
-        setEmptyTiffinCollected(!!updateData.emptyTiffinCollected);
-      }
-      if (updateData.rider) {
-        setDriverName(updateData.rider.name || 'Assigning Rider...');
-        setDriverPhone(updateData.rider.phone || '');
-      } else {
-        setDriverName('Assigning Rider...');
-        setDriverPhone('');
-      }
-      if (updateData.latitude !== null && updateData.latitude !== undefined && updateData.longitude !== null && updateData.longitude !== undefined) {
-        setDestinationLat(updateData.latitude);
-        setDestinationLng(updateData.longitude);
-      }
-      if (updateData.restaurant && updateData.restaurant.latitude && updateData.restaurant.longitude) {
-        setRestaurantLat(updateData.restaurant.latitude);
-        setRestaurantLng(updateData.restaurant.longitude);
+      if (updateData._id === selectedOrderIdRef.current) {
+        syncActiveOrderDetails(updateData);
       }
     };
 
@@ -379,7 +375,13 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
       console.log('Live rider location from socket:', loc);
       setDriverLat(loc.latitude);
       setDriverLng(loc.longitude);
-      setTimeLeftSeconds(getETASeconds(currentStatus, destinationLat, destinationLng, loc.latitude, loc.longitude));
+      setTimeLeftSeconds(getETASeconds(
+        currentStatusRef.current, 
+        destinationLatRef.current, 
+        destinationLngRef.current, 
+        loc.latitude, 
+        loc.longitude
+      ));
     };
 
     socket.on('order_status_updated', onStatusUpdate);
@@ -458,6 +460,9 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
 
   const statusColors = ['#F39C12', '#3498DB', '#9B59B6', '#2ECC71'];
 
+  const activeOrderObject = activeOrders.find(o => o._id === selectedOrderId);
+  const activeOrderName = activeOrderObject?.restaurant?.name || "Tonight's Tiffin";
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -471,15 +476,68 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Track Your Order</Text>
-        <Text style={styles.headerSub}>Tonight's Tiffin — {AppConfig.deliveryTimeWindow}</Text>
+        <Text style={styles.headerSub}>
+          {activeOrderName} — Order {orderId}
+        </Text>
       </LinearGradient>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
+        {/* Active Orders Horizontal Tab Selection list */}
+        {activeOrders.length > 1 && (
+          <View style={[styles.card, Shadows.card, { padding: Spacing.sm }]}>
+            <Text style={[styles.sectionTitle, { fontSize: 13, color: Colors.textSecondary, marginBottom: Spacing.xs }]}>
+              📦 Active Orders ({activeOrders.length}) — Tap to track
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+              {activeOrders.map((o) => {
+                const isSelected = o._id === selectedOrderId;
+                const shortId = `TF-${o._id.slice(-5).toUpperCase()}`;
+                const displayName = o.restaurant?.name || "Tonight's Tiffin";
+                
+                const statusMap: Record<string, string> = {
+                  pending: '⏳ Prep',
+                  cooking: '👨‍🍳 Cook',
+                  packed: '📦 Pack',
+                  out_for_delivery: '🛵 Way',
+                  delivered: '✅ Done'
+                };
+                const statusLabel = statusMap[o.status] || o.status;
+
+                return (
+                  <TouchableOpacity
+                    key={o._id}
+                    onPress={() => setSelectedOrderId(o._id)}
+                    style={[
+                      styles.orderTabBtn,
+                      isSelected && styles.orderTabBtnSelected
+                    ]}
+                  >
+                    <Text style={[styles.orderTabTitle, isSelected && styles.orderTabTitleSelected]} numberOfLines={1}>
+                      {displayName}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                      <Text style={styles.orderTabSub}>{shortId}</Text>
+                      <Text style={[styles.orderTabBadge, isSelected && styles.orderTabBadgeSelected]}>
+                        {statusLabel}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Status Steps */}
         <View style={[styles.card, Shadows.card]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs }}>
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Order Status</Text>
+            <View>
+              <Text style={[styles.sectionTitle, { marginBottom: 2 }]}>Order Status</Text>
+              <Text style={{ fontSize: 12, color: Colors.textMuted, fontFamily: Typography.fontFamily.medium }}>
+                Tracking: {activeOrderName}
+              </Text>
+            </View>
             {currentStatus < 3 && (
               <View style={{ backgroundColor: '#FFF0EA', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.md }}>
                 <Text style={{ color: '#FF4500', fontFamily: Typography.fontFamily.semiBold, fontSize: 13 }}>
@@ -591,15 +649,30 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
           )}
         </View>
 
-        {/* Today's Delivery */}
+        {/* Ordered Items Breakdown */}
         <View style={[styles.card, Shadows.card]}>
-          <Text style={styles.sectionTitle}>Today's Delivery ({orderPlanType.toUpperCase()})</Text>
-          {(AppConfig.plans.find(p => p.id === orderPlanType)?.items || ['Roti (4 pcs)', 'Dal Tadka', 'Sabji', 'Rice']).map((item, i) => (
-            <View key={i} style={styles.deliveryItem}>
-              <Text style={styles.deliveryItemDot}>•</Text>
-              <Text style={styles.deliveryItemText}>{item}</Text>
-            </View>
-          ))}
+          <Text style={styles.sectionTitle}>
+            {orderPlanType.startsWith('custom:') ? 'Ordered Items' : `Today's Delivery (${orderPlanType.toUpperCase()})`}
+          </Text>
+          {(() => {
+            const currentOrder = activeOrders.find(o => o._id === selectedOrderId);
+            if (currentOrder && currentOrder.items && currentOrder.items.length > 0) {
+              return currentOrder.items.map((item: any, i: number) => (
+                <View key={i} style={styles.deliveryItem}>
+                  <Text style={styles.deliveryItemDot}>•</Text>
+                  <Text style={styles.deliveryItemText}>
+                    {item.name} <Text style={{ color: '#FF6B35', fontWeight: 'bold' }}>x{item.quantity}</Text>
+                  </Text>
+                </View>
+              ));
+            }
+            return (AppConfig.plans.find(p => p.id === orderPlanType)?.items || ['Roti (4 pcs)', 'Dal Tadka', 'Sabji', 'Rice']).map((item, i) => (
+              <View key={i} style={styles.deliveryItem}>
+                <Text style={styles.deliveryItemDot}>•</Text>
+                <Text style={styles.deliveryItemText}>{item}</Text>
+              </View>
+            ));
+          })()}
         </View>
 
 
@@ -1223,5 +1296,45 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: '#FF4500',
     fontFamily: Typography.fontFamily.bold,
+  },
+  orderTabBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: Radius.md || 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    minWidth: 130,
+  },
+  orderTabBtnSelected: {
+    backgroundColor: '#FFF0EA',
+    borderColor: '#FF6B35',
+  },
+  orderTabTitle: {
+    fontSize: 12,
+    fontFamily: Typography.fontFamily.bold,
+    color: '#475569',
+  },
+  orderTabTitleSelected: {
+    color: '#FF6B35',
+  },
+  orderTabSub: {
+    fontSize: 10,
+    fontFamily: Typography.fontFamily.medium,
+    color: '#94A3B8',
+  },
+  orderTabBadge: {
+    fontSize: 9,
+    fontFamily: Typography.fontFamily.semiBold,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: Radius.sm || 4,
+    backgroundColor: '#E2E8F0',
+    color: '#64748B',
+    overflow: 'hidden',
+  },
+  orderTabBadgeSelected: {
+    backgroundColor: '#FF6B35',
+    color: '#FFFFFF',
   },
 });
