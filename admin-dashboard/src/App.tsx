@@ -969,15 +969,14 @@ function DashboardApp() {
     }
   };
 
-  // Start animated GPS Map Simulator
-  const handleDispatch = async (order: any) => {
+  const handleDispatch = async (order: any, riderId?: string) => {
     if (dispatchedOrderId) return;
     setDispatchedOrderId(order._id || order.id);
     setDeliveryProgress(0);
 
     const updateStatus = async (status: string) => {
       try {
-        await api.put(`/orders/${order._id || order.id}/status`, { status });
+        await api.put(`/orders/${order._id || order.id}/status`, { status, riderId });
       } catch (err) {
         console.error('Error updating order status:', err);
       }

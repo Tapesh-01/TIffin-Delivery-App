@@ -177,6 +177,9 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     order.status = status;
+    if (req.body.riderId) {
+      order.rider = req.body.riderId;
+    }
     if (req.body.emptyTiffinCollected !== undefined) {
       order.emptyTiffinCollected = req.body.emptyTiffinCollected;
     }

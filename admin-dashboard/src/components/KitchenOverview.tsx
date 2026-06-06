@@ -66,7 +66,7 @@ interface KitchenOverviewProps {
   transactions: any[];
   chartActive: boolean;
   setShowSubscribersModal: (s: boolean) => void;
-  handleDispatch: (order: any) => void;
+  handleDispatch: (order: any, riderId?: string) => void;
   handleRejectTransaction: (tx: any) => void;
   handleApproveTransaction: (tx: any) => void;
   loadAllData: () => void;
@@ -102,6 +102,8 @@ export const KitchenOverview: React.FC<KitchenOverviewProps> = ({
   handleApproveTransaction,
   loadAllData,
 }) => {
+  const [selectedRiders, setSelectedRiders] = useState<Record<string, string>>({});
+
   return (
     <div className="kitchen-overview-container">
       {/* Upper Widgets */}
@@ -466,14 +468,53 @@ export const KitchenOverview: React.FC<KitchenOverviewProps> = ({
                       </button>
                     )}
 
-                    {order.status === 'packed' && (
-                      <button 
-                        onClick={() => handleDispatch(order)}
-                        style={{ backgroundColor: '#f97316', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
-                      >
-                        🛵 Dispatch
-                      </button>
-                    )}
+                    {order.status === 'packed' && (() => {
+                      const riders = profiles.filter(p => p.role === 'rider');
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {riders.length > 0 && (
+                            <select
+                              value={selectedRiders[order._id || order.id] || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setSelectedRiders(prev => ({
+                                  ...prev,
+                                  [order._id || order.id]: val
+                                }));
+                              }}
+                              style={{
+                                backgroundColor: 'rgba(255,255,255,0.08)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                color: 'var(--text-primary)',
+                                borderRadius: '6px',
+                                padding: '4px 8px',
+                                fontSize: '11px',
+                                outline: 'none',
+                                maxWidth: '140px',
+                                height: '28px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <option value="" style={{ background: '#1e293b' }}>-- Select Rider --</option>
+                              {riders.map(r => (
+                                <option key={r._id || r.id} value={r._id || r.id} style={{ background: '#1e293b' }}>
+                                  {r.name} {r.isOnline ? '🟢' : '⚫'}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <button 
+                            onClick={() => {
+                              const riderId = selectedRiders[order._id || order.id];
+                              handleDispatch(order, riderId);
+                            }}
+                            style={{ backgroundColor: '#f97316', color: 'var(--text-primary)', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '11px', fontWeight: 600, height: '28px' }}
+                          >
+                            🛵 Dispatch
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );
