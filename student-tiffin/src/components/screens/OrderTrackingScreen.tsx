@@ -65,7 +65,10 @@ export const OrderTrackingScreen: React.FC<OrderTrackingScreenProps> = ({ naviga
     }
 
     const distance = getDistanceFromLatLonInKm(startLat, startLng, destLat, destLng);
-    const travelTime = distance * 4;
+    let travelTime = distance * 4;
+    if (distance > 5) {
+      travelTime = 8; // standard fallback of 8 mins if distance is unreasonably large (likely testing from another location)
+    }
 
     let totalMinutes = 0;
     if (status === 0) {
