@@ -13,6 +13,8 @@ import {
   Animated,
   Easing,
   Platform,
+  BackHandler,
+  RefreshControl,
 } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Typography, Spacing, Radius, Shadows } from '../../constants/theme';
@@ -97,6 +99,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [customizingItem, setCustomizingItem] = useState<MenuItem | null>(null);
   const [viewingRestaurant, setViewingRestaurant] = useState<Restaurant | null>(null);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -251,8 +254,46 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
       }
     });
 
+    // Listen for new or deleted restaurants in real-time
+    socket.on('restaurant_updated', ({ action, restaurant, restaurantId }: any) => {
+      if (action === 'create' && restaurant) {
+        const mapped: Restaurant = {
+          id: restaurant._id || restaurant.id,
+          name: restaurant.name,
+          description: restaurant.description || `${restaurant.cuisine} Specialities`,
+          cuisine: restaurant.cuisine,
+          rating: restaurant.rating || 4.5,
+          ratingCount: restaurant.ratingCount || 0,
+          deliveryTime: restaurant.deliveryTime || '20-30 mins',
+          deliveryFee: restaurant.deliveryFee !== undefined ? restaurant.deliveryFee : 20,
+          imageUrl: restaurant.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=60',
+          menu: (restaurant.menuItems || []).map((m: any) => ({
+            id: m._id || m.id,
+            name: m.name,
+            price: m.price,
+            description: m.description || '',
+            icon: m.isVeg ? '🟢 Veg' : '🔴 Non-Veg',
+            image: m.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+            isVeg: m.isVeg,
+            avgRating: m.avgRating || 0,
+            ratingCount: m.ratingCount || 0,
+            isAvailable: m.isAvailable !== false,
+            category: m.category || 'Popular Dishes',
+            originalPrice: m.originalPrice,
+          })),
+        };
+        setRestaurants(prev => {
+          if (prev.some(r => r.id === mapped.id)) return prev;
+          return [...prev, mapped];
+        });
+      } else if (action === 'delete' && restaurantId) {
+        setRestaurants(prev => prev.filter(r => r.id !== restaurantId));
+      }
+    });
+
     return () => {
       socket.off('restaurant_menu_updated');
+      socket.off('restaurant_updated');
     };
   }, []);
 
@@ -357,6 +398,15 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
       console.error('Failed to fetch restaurants', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchRestaurants();
+    } finally {
+      setRefreshing(false);
     }
   };
   
@@ -684,8 +734,8 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   const upiId = 'tapeshkarkel@okaxis';
   const merchantName = 'My Tiffin';
 
-  // Cuisine categories
-  const cuisines = ['All', 'American', 'Japanese', 'Italian', 'Indian', 'Mexican', 'Healthy'];
+  // Cuisine categories — derived dynamically from restaurant data
+  const cuisines = ['All', ...Array.from(new Set(restaurants.map(r => r.cuisine).filter(Boolean)))];
 
   // Filter restaurants
   const filteredRestaurants = restaurants.filter((r) => {
@@ -730,6 +780,44 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     setMenuPriceFilter('all');
     setShowMenuFilter(false);
   };
+
+  // Hardware back button — dismisses overlays in order of precedence
+  useEffect(() => {
+    const onBackPress = () => {
+      if (customizingItem) {
+        closeCustomizingOverlay();
+        return true;
+      }
+      if (activeReviewItem) {
+        closeReviewOverlay();
+        return true;
+      }
+      if (selectedMenuItem) {
+        closeDetailOverlay();
+        return true;
+      }
+      if (checkoutStep === 'payment') {
+        setCheckoutStep('address');
+        return true;
+      }
+      if (checkoutStep === 'address') {
+        setCheckoutStep('idle');
+        return true;
+      }
+      if (checkoutStep !== 'idle') {
+        setCheckoutStep('idle');
+        return true;
+      }
+      if (viewingRestaurant) {
+        handleCloseMenu();
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [customizingItem, activeReviewItem, selectedMenuItem, checkoutStep, viewingRestaurant]);
 
   const updateCartQty = (itemId: string, diff: number) => {
     setCart((prev) => {
@@ -833,7 +921,8 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header — only shown on the main screen, not inside restaurant/detail views */}
+      {!viewingRestaurant && (
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🍔 Restaurants</Text>
         <Text style={styles.headerSub}>Find local favorites delivered instantly</Text>
@@ -906,8 +995,10 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+      )}
 
-      {/* Cuisine selector */}
+      {/* Cuisine selector — only shown on the main screen, not inside restaurant view */}
+      {!viewingRestaurant && (
       <View style={{ height: 50, marginVertical: Spacing.sm }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.cuisineScroll}>
           {cuisines.map((c) => (
@@ -931,9 +1022,22 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
           ))}
         </ScrollView>
       </View>
+      )}
 
       {/* Restaurant List */}
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
+      >
         {filteredRestaurants.length > 0 ? (
           filteredRestaurants.map((res) => (
             <TouchableOpacity
@@ -1725,95 +1829,6 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
                         <Text style={{ fontSize: 13, color: '#64748B', lineHeight: 18, fontFamily: Typography.fontFamily.regular }}>
                           {selectedMenuItem.description || 'No description available for this item.'}
                         </Text>
-                      </View>
-
-                      {/* ── Quick Search inside item detail — same design as outer bar ── */}
-                      <View style={{ marginTop: 20, marginBottom: 4 }}>
-                        <Text style={{ fontSize: 14, fontFamily: Typography.fontFamily.bold, color: '#1E293B', marginBottom: 10 }}>
-                          🔍 Search More Items
-                        </Text>
-                        <View style={styles.menuSearchRow}>
-                          <Text style={styles.searchIcon}>🔍</Text>
-                          <TextInput
-                            style={styles.searchInput}
-                            placeholder="Search items…"
-                            placeholderTextColor="#94A3B8"
-                            value={menuSearchQuery}
-                            onChangeText={text => {
-                              setMenuSearchQuery(text);
-                              setSelectedMenuItem(null);
-                            }}
-                            returnKeyType="search"
-                          />
-                          {menuSearchQuery.length > 0 && (
-                            <TouchableOpacity
-                              onPress={() => setMenuSearchQuery('')}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                              style={{ marginRight: 6 }}
-                            >
-                              <Text style={{ fontSize: 15, color: '#94A3B8', fontWeight: 'bold' }}>✕</Text>
-                            </TouchableOpacity>
-                          )}
-                          {/* Filter funnel */}
-                          <TouchableOpacity
-                            onPress={() => setShowMenuFilter(v => !v)}
-                            activeOpacity={0.7}
-                            style={[
-                              styles.filterFunnelBtn,
-                              (showMenuFilter || menuPriceFilter !== 'all') && styles.filterFunnelBtnActive,
-                            ]}
-                          >
-                            <Text style={{ fontSize: 14, lineHeight: 18 }}>⚙️</Text>
-                            {menuPriceFilter !== 'all' && (
-                              <View style={styles.filterActiveDot} />
-                            )}
-                          </TouchableOpacity>
-                        </View>
-
-                        {/* Dropdown filter box */}
-                        {showMenuFilter && (
-                          <View style={styles.filterDropdownBox}>
-                            <Text style={styles.filterDropdownTitle}>💰 Filter by Price</Text>
-                            <View style={styles.filterDropdownGrid}>
-                              {(
-                                [
-                                  { key: 'all',      label: 'All Prices',   sub: 'Show everything' },
-                                  { key: 'under50',  label: 'Under ₹50',    sub: 'Budget friendly' },
-                                  { key: 'under100', label: 'Under ₹100',   sub: 'Most popular' },
-                                  { key: 'under150', label: 'Under ₹150',   sub: 'Mid range' },
-                                  { key: 'above150', label: '₹150 & above', sub: 'Premium dishes' },
-                                ] as { key: typeof menuPriceFilter; label: string; sub: string }[]
-                              ).map(opt => (
-                                <TouchableOpacity
-                                  key={opt.key}
-                                  onPress={() => {
-                                    setMenuPriceFilter(opt.key);
-                                    setShowMenuFilter(false);
-                                    setSelectedMenuItem(null);
-                                  }}
-                                  activeOpacity={0.75}
-                                  style={[
-                                    styles.filterOptionCard,
-                                    menuPriceFilter === opt.key && styles.filterOptionCardActive,
-                                  ]}
-                                >
-                                  <Text style={[
-                                    styles.filterOptionLabel,
-                                    menuPriceFilter === opt.key && styles.filterOptionLabelActive,
-                                  ]}>
-                                    {opt.label}
-                                  </Text>
-                                  <Text style={[
-                                    styles.filterOptionSub,
-                                    menuPriceFilter === opt.key && { color: Colors.primary },
-                                  ]}>
-                                    {opt.sub}
-                                  </Text>
-                                </TouchableOpacity>
-                              ))}
-                            </View>
-                          </View>
-                        )}
                       </View>
 
                       {/* Recommended "People also like this" scrolling row */}
@@ -3581,6 +3596,7 @@ const styles = StyleSheet.create({
   },
   customSheetScroll: {
     marginVertical: Spacing.sm,
+    flexShrink: 1,
   },
   customItemDesc: {
     fontFamily: Typography.fontFamily.regular,
