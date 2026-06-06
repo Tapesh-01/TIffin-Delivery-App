@@ -17,7 +17,12 @@
       "bundleIdentifier": "com.studenttiffin.app"
     },
     "android": {
-      "package": "com.studenttiffin.app"
+      "package": "com.studenttiffin.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDummyApiKeyForMapInitialization_ST"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
