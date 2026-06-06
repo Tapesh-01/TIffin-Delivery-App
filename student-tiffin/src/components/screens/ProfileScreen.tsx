@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  Linking,
+  RefreshControl,
 } from 'react-native';
 import { api } from '../../lib/api';
 import { socket } from '../../lib/socket';
@@ -32,6 +34,7 @@ interface ProfileScreenProps {
   activeRestaurant?: any;
   checkoutStep?: 'idle' | 'address' | 'payment' | 'scanning' | 'confirming';
   setCheckoutStep?: React.Dispatch<React.SetStateAction<'idle' | 'address' | 'payment' | 'scanning' | 'confirming'>>;
+  refreshUser?: () => Promise<void>;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
@@ -43,8 +46,18 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   activeRestaurant,
   checkoutStep,
   setCheckoutStep,
+  refreshUser,
 }) => {
   const [notificationsOn, setNotificationsOn] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    if (refreshUser) {
+      await refreshUser();
+    }
+    setRefreshing(false);
+  }, [refreshUser]);
   const screenWidth = Dimensions.get('window').width;
 
   // Unified modal state
@@ -421,7 +434,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
+      >
 
         {/* Active Cart Section */}
         {cart && Object.keys(cart).length > 0 && activeRestaurant && (
@@ -1036,9 +1056,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   
                   <View style={styles.supportContactCard}>
                     <Text style={styles.supportLabel}>📞 Phone Support:</Text>
-                    <Text style={styles.supportVal}>+91 98765 43210</Text>
+                    <TouchableOpacity onPress={() => Linking.openURL('tel:7067084220')}>
+                      <Text style={[styles.supportVal, { textDecorationLine: 'underline', color: Colors.primary }]}>+91 70670 84220</Text>
+                    </TouchableOpacity>
                     <Text style={styles.supportLabel}>📧 Email Support:</Text>
-                    <Text style={styles.supportVal}>support@studenttiffin.com</Text>
+                    <TouchableOpacity onPress={() => Linking.openURL('mailto:tapeshkarkel01@gmail.com')}>
+                      <Text style={[styles.supportVal, { textDecorationLine: 'underline', color: Colors.primary }]}>support@studenttiffin.com</Text>
+                    </TouchableOpacity>
                     <Text style={styles.supportSub}>Timing: 9:00 AM to 10:00 PM (Everyday)</Text>
 
                     <TouchableOpacity 

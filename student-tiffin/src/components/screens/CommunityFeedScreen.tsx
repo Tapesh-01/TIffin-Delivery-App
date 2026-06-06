@@ -110,6 +110,8 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
   const [showRatePanel, setShowRatePanel] = useState(false);
   const [showVotePanel, setShowVotePanel] = useState(false);
 
+  const isWeekend = new Date().getDay() === 6 || new Date().getDay() === 0;
+  const showResults = voted !== null || isWeekend;
   const totalVotes = (poll.votes_a || 0) + (poll.votes_b || 0);
   const pctA = totalVotes > 0 ? Math.round(((poll.votes_a || 0) / totalVotes) * 100) : 50;
   const pctB = totalVotes > 0 ? Math.round(((poll.votes_b || 0) / totalVotes) * 100) : 50;
@@ -296,16 +298,17 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
 
           {/* Vote This Week Card */}
           <TouchableOpacity
-            style={[styles.actionCard, voted && styles.actionCardDone]}
+            style={[styles.actionCard, (voted || isWeekend) && styles.actionCardDone]}
             onPress={() => setShowVotePanel(true)}
             activeOpacity={0.75}
           >
             <Text style={styles.actionCardEmoji}>🗳️</Text>
-            <Text style={styles.actionCardTitle}>Vote Next Week</Text>
+            <Text style={styles.actionCardTitle}>{isWeekend ? "Weekly Vote Results" : "Vote Next Week"}</Text>
             <Text style={styles.actionCardSub}>
-              {voted ? `You voted! (${totalVotes} total)` : 'Pick your favourite dish'}
+              {isWeekend ? `Voting Closed • View Results (${totalVotes} votes)` : voted ? `You voted! (${totalVotes} total)` : 'Pick your favourite dish'}
             </Text>
-            {!voted && <Text style={styles.actionCardArrow}>Tap to vote →</Text>}
+            {!(voted || isWeekend) && <Text style={styles.actionCardArrow}>Tap to vote →</Text>}
+            {(voted || isWeekend) && <Text style={styles.actionCardArrow}>Tap to view results →</Text>}
           </TouchableOpacity>
         </View>
 
@@ -405,17 +408,19 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
       <RightSliderPanel
         visible={showVotePanel}
         onClose={() => setShowVotePanel(false)}
-        title="Vote Next Week's Menu"
+        title={isWeekend ? "Weekly Vote Results" : "Vote Next Week's Menu"}
         emoji="🗳️"
       >
         <Text style={styles.panelSectionLabel}>{poll.question}</Text>
-        <Text style={styles.pollSubLabel}>Aapka vote agle hafte ka menu decide karega!</Text>
+        <Text style={styles.pollSubLabel}>
+          {isWeekend ? "Voting is closed. Here are the final results!" : "Aapka vote agle hafte ka menu decide karega!"}
+        </Text>
 
         {/* Option A */}
         <TouchableOpacity
           style={[styles.voteOptionCard, voted === 'a' && styles.voteOptionCardActive]}
           onPress={() => handleVote('a')}
-          disabled={voted !== null}
+          disabled={voted !== null || isWeekend}
           activeOpacity={0.75}
         >
           <View style={styles.voteOptionTop}>
@@ -424,13 +429,13 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                 {poll.option_a}
               </Text>
               {totalVotes > 0 && poll.votes_a > poll.votes_b && (
-                <View style={styles.leaderBadge}><Text style={styles.leaderBadgeText}>🏆 Leading</Text></View>
+                <View style={styles.leaderBadge}><Text style={styles.leaderBadgeText}>{isWeekend ? "🏆 Winner" : "🏆 Leading"}</Text></View>
               )}
             </View>
-            <Text style={styles.votePct}>{pctA}%</Text>
+            <Text style={styles.votePct}>{showResults ? `${pctA}%` : ''}</Text>
           </View>
           <View style={styles.voteBarBg}>
-            <Animated.View style={[styles.voteBarFill, { width: `${pctA}%` as any }]} />
+            <Animated.View style={[styles.voteBarFill, { width: `${showResults ? pctA : 0}%` as any }]} />
           </View>
           {voted === 'a' && <Text style={styles.votedTick}>✓ Aapka vote</Text>}
         </TouchableOpacity>
@@ -446,7 +451,7 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
         <TouchableOpacity
           style={[styles.voteOptionCard, voted === 'b' && styles.voteOptionCardActive]}
           onPress={() => handleVote('b')}
-          disabled={voted !== null}
+          disabled={voted !== null || isWeekend}
           activeOpacity={0.75}
         >
           <View style={styles.voteOptionTop}>
@@ -455,24 +460,33 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                 {poll.option_b}
               </Text>
               {totalVotes > 0 && poll.votes_b > poll.votes_a && (
-                <View style={styles.leaderBadge}><Text style={styles.leaderBadgeText}>🏆 Leading</Text></View>
+                <View style={styles.leaderBadge}><Text style={styles.leaderBadgeText}>{isWeekend ? "🏆 Winner" : "🏆 Leading"}</Text></View>
               )}
             </View>
-            <Text style={styles.votePct}>{pctB}%</Text>
+            <Text style={styles.votePct}>{showResults ? `${pctB}%` : ''}</Text>
           </View>
           <View style={styles.voteBarBg}>
-            <Animated.View style={[styles.voteBarFill, { width: `${pctB}%` as any }]} />
+            <Animated.View style={[styles.voteBarFill, { width: `${showResults ? pctB : 0}%` as any }]} />
           </View>
           {voted === 'b' && <Text style={styles.votedTick}>✓ Aapka vote</Text>}
         </TouchableOpacity>
 
         <Text style={styles.totalVotesText}>🗳️ {totalVotes} students ne vote kiya</Text>
 
-        {voted && (
-          <View style={styles.voteDoneCard}>
-            <Text style={styles.voteDoneText}>✅ Aapka vote record ho gaya! Result kal announce hoga.</Text>
+        {isWeekend ? (
+          <View style={[styles.voteDoneCard, { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }]}>
+            <Text style={[styles.voteDoneText, { color: '#15803D', fontWeight: 'bold' }]}>
+              🏆 Final Winner: {poll.votes_a > poll.votes_b ? poll.option_a : poll.votes_b > poll.votes_a ? poll.option_b : "Tie (Both will be featured!)"}
+            </Text>
+            <Text style={{ fontFamily: Typography.fontFamily.regular, fontSize: 11, color: '#166534', marginTop: 4, textAlign: 'center' }}>
+              Voting closed on Saturday 12:00 AM. A new poll will open on Monday!
+            </Text>
           </View>
-        )}
+        ) : voted ? (
+          <View style={styles.voteDoneCard}>
+            <Text style={styles.voteDoneText}>✅ Aapka vote record ho gaya! Result Saturday ko aayega.</Text>
+          </View>
+        ) : null}
       </RightSliderPanel>
     </View>
   );

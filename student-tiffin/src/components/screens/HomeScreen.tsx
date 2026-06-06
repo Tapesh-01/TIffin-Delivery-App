@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -41,15 +42,72 @@ const TODAY = DAYS[TODAY_INDEX];
 interface HomeScreenProps {
   user: User;
   navigate: (screen: Screen) => void;
+  refreshUser?: () => Promise<void>;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigate }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigate, refreshUser }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [selectedDay, setSelectedDay] = useState(TODAY);
   const [menuData, setMenuData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeOrder, setActiveOrder] = useState<any>(null);
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const fetchMenuPromise = async () => {
+        try {
+          const { data } = await api.get('/menu/weekly');
+          if (data && data.success && data.data && data.data.length > 0) {
+            const mapped = data.data.map((m: any) => ({
+              id: m._id || m.id,
+              day_name: m.dayName,
+              main_dish: m.mainDish,
+              side_dish: m.sideDish,
+              emoji: m.emoji || '🍲'
+            }));
+            setMenuData(mapped);
+          }
+        } catch (e) {
+          console.log('Error refreshing menu:', e);
+        }
+      };
+
+      const fetchActiveOrderPromise = async () => {
+        try {
+          const { data } = await api.get('/orders/myorders');
+          if (data.success && data.data.length > 0) {
+            const latestOrder = data.data[0];
+            const orderDate = new Date(latestOrder.updatedAt || latestOrder.createdAt);
+            const diffHours = (new Date().getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+            if (latestOrder.status !== 'delivered' || diffHours < 1.5) {
+              setActiveOrder(latestOrder);
+              const totalSecs = calculateOrderETASeconds(latestOrder);
+              setEtaSeconds(totalSecs);
+            } else {
+              setActiveOrder(null);
+            }
+          } else {
+            setActiveOrder(null);
+          }
+        } catch (e) {
+          console.log('Error refreshing active order:', e);
+        }
+      };
+
+      await Promise.all([
+        fetchMenuPromise(),
+        fetchActiveOrderPromise(),
+        refreshUser ? refreshUser() : Promise.resolve(),
+      ]);
+    } catch (err) {
+      console.log('Error during home screen pull-to-refresh:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshUser]);
 
   const HOSTEL_COORDS: Record<string, { lat: number; lng: number }> = {
     'BH-3': { lat: 28.6200, lng: 77.2100 },
@@ -413,7 +471,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigate }) => {
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
+      >
 
         {/* ─── TODAY'S MEAL CARD (smart: holiday / paused / active) ─── */}
         {(() => {

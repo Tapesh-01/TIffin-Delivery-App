@@ -11,6 +11,7 @@ import {
   Linking,
   ActivityIndicator,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/colors';
@@ -25,16 +26,26 @@ interface WalletScreenProps {
   navigate: (screen: Screen) => void;
   onRecharge: (amount: number, utr: string) => void;
   transactions: any[];
+  refreshUser?: () => Promise<void>;
 }
 
 const QUICK_AMOUNTS = [100, 200, 500, 1000, 2000];
 
-export const WalletScreen: React.FC<WalletScreenProps> = ({ user, navigate, onRecharge, transactions }) => {
+export const WalletScreen: React.FC<WalletScreenProps> = ({ user, navigate, onRecharge, transactions, refreshUser }) => {
   const [customAmount, setCustomAmount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [utrCode, setUtrCode] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    if (refreshUser) {
+      await refreshUser();
+    }
+    setRefreshing(false);
+  }, [refreshUser]);
 
   const upiId = 'tapeshkarkel@okaxis'; // Merchant UPI ID
   const merchantName = 'My Tiffin';
@@ -89,7 +100,14 @@ export const WalletScreen: React.FC<WalletScreenProps> = ({ user, navigate, onRe
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
+      >
 
         {/* Recharge Section */}
         <View style={[styles.card, Shadows.card]}>

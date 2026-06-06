@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Typography, Spacing, Radius, Shadows } from '../../constants/theme';
@@ -16,26 +16,34 @@ export const WeeklyMenuScreen: React.FC<WeeklyMenuScreenProps> = ({ navigate }) 
   const [activeTab, setActiveTab] = useState<'today' | 'weekly'>('weekly');
   const [menuData, setMenuData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchMenu = async (showLoadingIndicator = true) => {
+    if (showLoadingIndicator) setIsLoading(true);
+    try {
+      const { data } = await api.get('/menu/weekly');
+      if (data.success) {
+        const mapped = data.data.map((item: any) => ({
+          ...item,
+          id: item.dayIndex !== undefined ? item.dayIndex : (item.id || item._id)
+        }));
+        setMenuData(mapped);
+      }
+    } catch (error) {
+      console.error('Failed to fetch menu:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMenu = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await api.get('/menu/weekly');
-        if (data.success) {
-          const mapped = data.data.map((item: any) => ({
-            ...item,
-            id: item.dayIndex !== undefined ? item.dayIndex : (item.id || item._id)
-          }));
-          setMenuData(mapped);
-        }
-      } catch (error) {
-        console.error('Failed to fetch menu:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMenu();
+    fetchMenu(true);
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchMenu(false);
+    setRefreshing(false);
   }, []);
 
   const todayIndex = new Date().getDay() === 0 ? 7 : new Date().getDay(); // 1 = Mon, 7 = Sun
@@ -70,7 +78,14 @@ export const WeeklyMenuScreen: React.FC<WeeklyMenuScreenProps> = ({ navigate }) 
         </View>
       </LinearGradient>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />
+        }
+      >
         {isLoading ? (
           <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
         ) : (

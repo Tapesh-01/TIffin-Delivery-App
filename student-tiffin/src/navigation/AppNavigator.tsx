@@ -346,6 +346,18 @@ const AppNavigatorComponent: React.FC = () => {
     );
   }
 
+  const refreshUser = async () => {
+    try {
+      const { data } = await api.get('/auth/profile');
+      if (data.success) {
+        setUser(data.user);
+        fetchUserTransactions(data.user.id);
+      }
+    } catch (e) {
+      console.log('Error refreshing user profile:', e);
+    }
+  };
+
   const renderContent = () => {
     if (currentScreen === 'login' || !user) {
       return <LoginScreen onLogin={handleLogin} />;
@@ -353,7 +365,7 @@ const AppNavigatorComponent: React.FC = () => {
 
     switch (currentScreen) {
       case 'home':
-        return <HomeScreen user={user} navigate={navigate} />;
+        return <HomeScreen user={user} navigate={navigate} refreshUser={refreshUser} />;
       case 'menu':
         return <WeeklyMenuScreen navigate={navigate} />;
       case 'subscription':
@@ -361,7 +373,7 @@ const AppNavigatorComponent: React.FC = () => {
       case 'tracking':
         return <OrderTrackingScreen navigate={navigate} userName={user.name} />;
       case 'wallet':
-        return <WalletScreen user={user} navigate={navigate} onRecharge={handleRecharge} transactions={userTransactions} />;
+        return <WalletScreen user={user} navigate={navigate} onRecharge={handleRecharge} transactions={userTransactions} refreshUser={refreshUser} />;
       case 'profile':
         return (
           <ProfileScreen
@@ -373,6 +385,7 @@ const AppNavigatorComponent: React.FC = () => {
             activeRestaurant={activeRestaurant}
             checkoutStep={checkoutStep}
             setCheckoutStep={setCheckoutStep}
+            refreshUser={refreshUser}
           />
         );
       case 'vacation':
@@ -396,7 +409,7 @@ const AppNavigatorComponent: React.FC = () => {
       case 'name_setup':
         return <NameSetupScreen user={user} onComplete={handleNameSetupComplete} />;
       default:
-        return <HomeScreen user={user} navigate={navigate} />;
+        return <HomeScreen user={user} navigate={navigate} refreshUser={refreshUser} />;
     }
   };
 
