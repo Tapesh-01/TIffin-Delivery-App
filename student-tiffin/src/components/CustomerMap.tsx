@@ -2,35 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform, Text, TouchableOpacity } from 'react-native';
 import { Colors } from '../constants/colors';
 
-// Check if we can import react-native-maps (only on native)
-let MapView: any = null;
-let Marker: any = null;
-let Polyline: any = null;
+// Check if we can import react-native-webview (only on native)
+let WebView: any = null;
 
 if (Platform.OS !== 'web') {
   try {
-    const Maps = require('react-native-maps');
-    MapView = Maps.default || Maps.MapView;
-    Marker = Maps.Marker;
-    Polyline = Maps.Polyline;
+    WebView = require('react-native-webview').WebView;
   } catch (e) {
-    console.warn('react-native-maps could not be loaded on this platform:', e);
+    console.warn('react-native-webview could not be loaded on this platform:', e);
   }
 }
-
-// Retro Silver-Grey Premium map style for native MapView
-const retroMapStyle = [
-  { "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] },
-  { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
-  { "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
-  { "elementType": "labels.text.stroke", "stylers": [{ "color": "#f5f5f5" }] },
-  { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#eeeeee" }] },
-  { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-  { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#e5e5e5" }] },
-  { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] },
-  { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#dadada" }] },
-  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#c9c9c9" }] }
-];
 
 interface CustomerMapProps {
   driverLocation: { lat: number; lng: number } | null;
@@ -147,7 +128,11 @@ export const CustomerMap: React.FC<CustomerMapProps> = ({
             destMarker.bindTooltip("${destinationName || 'Selected Location'}", { permanent: true, direction: 'top', className: 'map-label' });
 
             function updateCoords(lat, lng) {
-              window.parent.postMessage({ type: 'location_selected', lat: lat, lng: lng }, '*');
+              if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'location_selected', lat: lat, lng: lng }));
+              } else {
+                window.parent.postMessage({ type: 'location_selected', lat: lat, lng: lng }, '*');
+              }
             }
 
             map.on('click', function(e) {
@@ -224,7 +209,7 @@ export const CustomerMap: React.FC<CustomerMapProps> = ({
   }
 
   // Native maps
-  if (!MapView) {
+  if (!WebView) {
     return (
       <View style={[styles.container, styles.fallbackContainer]}>
         <Text style={styles.fallbackTxt}>📍 Map view not available on this device.</Text>
@@ -232,78 +217,27 @@ export const CustomerMap: React.FC<CustomerMapProps> = ({
     );
   }
 
+  const handleNativeMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data && data.type === 'location_selected') {
+        if (interactive && onLocationSelect) {
+          onLocationSelect(data.lat, data.lng);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse native map message:', err);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <MapView
+      <WebView
+        originWhitelist={['*']}
+        source={{ html: leafletHtml }}
+        onMessage={handleNativeMessage}
         style={styles.map}
-        customMapStyle={retroMapStyle}
-        zoomEnabled={true}
-        scrollEnabled={true}
-        pitchEnabled={true}
-        rotateEnabled={true}
-        onPress={(e: any) => {
-          if (interactive && onLocationSelect) {
-            const { latitude, longitude } = e.nativeEvent.coordinate;
-            onLocationSelect(latitude, longitude);
-          }
-        }}
-        initialRegion={interactive ? {
-          latitude: dLat,
-          longitude: dLng,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        } : {
-          latitude: (rLat + dLat) / 2,
-          longitude: (rLng + dLng) / 2,
-          latitudeDelta: Math.abs(rLat - dLat) * 1.5 || 0.01,
-          longitudeDelta: Math.abs(rLng - dLng) * 1.5 || 0.01,
-        }}
-      >
-        {/* Destination Marker */}
-        <Marker
-          coordinate={{ latitude: dLat, longitude: dLng }}
-          title={interactive ? "Your Custom Location" : "Your Hostel"}
-          description={destinationName}
-          draggable={interactive}
-          onDragEnd={(e: any) => {
-            if (interactive && onLocationSelect) {
-              const { latitude, longitude } = e.nativeEvent.coordinate;
-              onLocationSelect(latitude, longitude);
-            }
-          }}
-        >
-          <View style={styles.destinationMarkerWrap}>
-            <Text style={{ fontSize: 20 }}>📍</Text>
-          </View>
-        </Marker>
-
-        {/* Rider Marker */}
-        {driverLocation && (
-          <Marker
-            coordinate={{ latitude: rLat, longitude: rLng }}
-            title="Delivery Partner"
-            description="Tiffin is on the way!"
-          >
-            <View style={styles.riderMarkerWrap}>
-              <Text style={{ fontSize: 20 }}>🏍️</Text>
-              <View style={styles.markerPulseRing} />
-            </View>
-          </Marker>
-        )}
-
-        {/* Polyline Route - Premium dotted/dashed-like line */}
-        {driverLocation && (
-          <Polyline
-            coordinates={[
-              { latitude: rLat, longitude: rLng },
-              { latitude: dLat, longitude: dLng },
-            ]}
-            strokeColor={Colors.primary}
-            strokeWidth={4.5}
-            lineDashPattern={[6, 6]}
-          />
-        )}
-      </MapView>
+      />
 
       {/* Floating native HUD */}
       {!interactive ? (
