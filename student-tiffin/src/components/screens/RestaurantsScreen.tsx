@@ -73,6 +73,16 @@ const ADDON_PRICES: Record<string, number> = {
 
 const campusAddons = ['Extra Roti', 'Curd Cup', 'Gulab Jamun', 'Salad Bowl'];
 
+const getAddonPrice = (name: string): number => {
+  const match = name.match(/(.+) \(x(\d+)\)/);
+  if (match) {
+    const baseName = match[1];
+    const qty = parseInt(match[2], 10);
+    return (ADDON_PRICES[baseName] || 0) * qty;
+  }
+  return ADDON_PRICES[name] || 0;
+};
+
 interface RestaurantsScreenProps {
   navigate: (screen: Screen) => void;
   user: User;
@@ -483,7 +493,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   const [itemReviews, setItemReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [tempQty, setTempQty] = useState(1);
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<Record<string, number>>({});
   const [orderAddons, setOrderAddons] = useState<string[]>([]);
 
   // Animation values for Popups
@@ -646,7 +656,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     if (selectedMenuItem) {
       const currentQty = cart[selectedMenuItem.id] || 1;
       setTempQty(currentQty);
-      setSelectedAddons([]); // reset addons for this item
+      setSelectedAddons({}); // reset addons for this item
     }
   }, [selectedMenuItem, cart]);
 
@@ -655,7 +665,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     if (customizingItem) {
       const currentQty = cart[customizingItem.id] || 1;
       setTempQty(currentQty);
-      setSelectedAddons([]); // reset addons for this item
+      setSelectedAddons({}); // reset addons for this item
     }
   }, [customizingItem, cart]);
 
@@ -663,7 +673,10 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     if (!customizingItem) return;
     setCart(prev => ({ ...prev, [customizingItem.id]: tempQty }));
     setOrderAddons(prev => {
-      const merged = [...prev, ...selectedAddons];
+      const formattedSelected = Object.entries(selectedAddons)
+        .filter(([_, qty]) => qty > 0)
+        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+      const merged = [...prev, ...formattedSelected];
       return Array.from(new Set(merged));
     });
     closeCustomizingOverlay(() => {
@@ -675,7 +688,10 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     if (!selectedMenuItem) return;
     setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
     setOrderAddons(prev => {
-      const merged = [...prev, ...selectedAddons];
+      const formattedSelected = Object.entries(selectedAddons)
+        .filter(([_, qty]) => qty > 0)
+        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+      const merged = [...prev, ...formattedSelected];
       return Array.from(new Set(merged));
     });
     closeDetailOverlay(() => {
@@ -687,7 +703,10 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
     if (!selectedMenuItem) return;
     setCart(prev => ({ ...prev, [selectedMenuItem.id]: tempQty }));
     setOrderAddons(prev => {
-      const merged = [...prev, ...selectedAddons];
+      const formattedSelected = Object.entries(selectedAddons)
+        .filter(([_, qty]) => qty > 0)
+        .map(([name, qty]) => qty > 1 ? `${name} (x${qty})` : name);
+      const merged = [...prev, ...formattedSelected];
       return Array.from(new Set(merged));
     });
     closeDetailOverlay(() => {
@@ -845,7 +864,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
   };
 
   const totalAmount = getCartTotalAmount();
-  const addonsTotalAmount = orderAddons.reduce((sum, name) => sum + (ADDON_PRICES[name] || 0), 0);
+  const addonsTotalAmount = orderAddons.reduce((sum, name) => sum + getAddonPrice(name), 0);
   const grandTotal = totalAmount + (activeRestaurant?.deliveryFee || 0) + addonsTotalAmount;
 
   // Submit Order
@@ -2027,24 +2046,83 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
                 
                 <View style={styles.customAddonsList}>
                   {campusAddons.map((ad) => {
-                    const isSelected = selectedAddons.includes(ad);
+                    const qty = selectedAddons[ad] || 0;
                     const price = ADDON_PRICES[ad];
                     return (
-                      <TouchableOpacity
+                      <View
                         key={ad}
-                        style={[styles.customAddonRow, isSelected && styles.customAddonRowActive]}
-                        onPress={() => {
-                          setSelectedAddons(prev =>
-                            prev.includes(ad) ? prev.filter(x => x !== ad) : [...prev, ad]
-                          );
-                        }}
+                        style={[styles.customAddonRow, qty > 0 && styles.customAddonRowActive]}
                       >
-                        <View style={[styles.customCheckbox, isSelected && styles.customCheckboxActive]}>
-                          {isSelected && <Text style={styles.customCheckmark}>✓</Text>}
-                        </View>
-                        <Text style={styles.customAddonLabel}>{ad}</Text>
-                        <Text style={styles.customAddonPrice}>+₹{price}</Text>
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+                          onPress={() => {
+                            setSelectedAddons(prev => {
+                              const next = { ...prev };
+                              if (qty > 0) {
+                                delete next[ad];
+                              } else {
+                                next[ad] = 1;
+                              }
+                              return next;
+                            });
+                          }}
+                        >
+                          <View style={[styles.customCheckbox, qty > 0 && styles.customCheckboxActive]}>
+                            {qty > 0 && <Text style={styles.customCheckmark}>✓</Text>}
+                          </View>
+                          <Text style={styles.customAddonLabel}>{ad}</Text>
+                        </TouchableOpacity>
+
+                        {qty > 0 ? (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                setSelectedAddons(prev => {
+                                  const next = { ...prev };
+                                  if (qty <= 1) {
+                                    delete next[ad];
+                                  } else {
+                                    next[ad] = qty - 1;
+                                  }
+                                  return next;
+                                });
+                              }}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 14,
+                                backgroundColor: '#F1F5F9',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#64748B', lineHeight: 28 }}>-</Text>
+                            </TouchableOpacity>
+                            <Text style={{ fontSize: 14, fontFamily: Typography.fontFamily.bold, color: '#1E293B' }}>{qty}</Text>
+                            <TouchableOpacity
+                              onPress={() => {
+                                setSelectedAddons(prev => ({
+                                  ...prev,
+                                  [ad]: qty + 1
+                                }));
+                              }}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 14,
+                                backgroundColor: Colors.primary,
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 28 }}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <Text style={styles.customAddonPrice}>+₹{price}</Text>
+                        )}
+                      </View>
                     );
                   })}
                 </View>
@@ -2076,7 +2154,7 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
               <View style={styles.customPriceBlock}>
                 <Text style={styles.customPriceLabel}>Total Price</Text>
                 <Text style={styles.customPriceValue}>
-                  ₹{(customizingItem.price + selectedAddons.reduce((sum, ad) => sum + (ADDON_PRICES[ad] || 0), 0)) * tempQty}
+                  ₹{(customizingItem.price + Object.entries(selectedAddons).reduce((sum, [ad, qty]) => sum + (ADDON_PRICES[ad] || 0) * qty, 0)) * tempQty}
                 </Text>
               </View>
               {customizingItem.isAvailable === false ? (
@@ -3603,6 +3681,7 @@ const styles = StyleSheet.create({
   customSheetScroll: {
     marginVertical: Spacing.sm,
     flexShrink: 1,
+    maxHeight: 350,
   },
   customItemDesc: {
     fontFamily: Typography.fontFamily.regular,

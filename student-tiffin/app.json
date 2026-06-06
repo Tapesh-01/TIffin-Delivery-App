@@ -17,12 +17,6 @@
       "bundleIdentifier": "com.studenttiffin.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png",
-        "backgroundColor": "#FF4500"
-      },
       "package": "com.studenttiffin.app"
     },
     "web": {
