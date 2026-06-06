@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322189659203",
+    "project_id": "my-tiffin-app-2b56c",
+    "storage_bucket": "my-tiffin-app-2b56c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322189659203:android:6c7ea618b13344aeb858f6",
+        "android_client_info": {
+          "package_name": "com.studenttiffin.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvMUN7b2iLnMw8j7viNBnmAv81hAP3IyI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
