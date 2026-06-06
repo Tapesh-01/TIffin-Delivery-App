@@ -16,6 +16,7 @@ import {
   BackHandler,
   RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/colors';
 import { Typography, Spacing, Radius, Shadows } from '../../constants/theme';
 import { Screen, User } from '../../navigation/AppNavigator';
@@ -91,8 +92,8 @@ interface RestaurantsScreenProps {
   setCart: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   activeRestaurant: Restaurant | null;
   setActiveRestaurant: React.Dispatch<React.SetStateAction<Restaurant | null>>;
-  checkoutStep: 'idle' | 'address' | 'payment' | 'scanning' | 'confirming';
-  setCheckoutStep: React.Dispatch<React.SetStateAction<'idle' | 'address' | 'payment' | 'scanning' | 'confirming'>>;
+  checkoutStep: 'idle' | 'address' | 'payment' | 'scanning' | 'confirming' | 'success';
+  setCheckoutStep: React.Dispatch<React.SetStateAction<'idle' | 'address' | 'payment' | 'scanning' | 'confirming' | 'success'>>;
 }
 
 export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({

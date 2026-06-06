@@ -32,8 +32,8 @@ interface ProfileScreenProps {
   cart?: Record<string, number>;
   setCart?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
   activeRestaurant?: any;
-  checkoutStep?: 'idle' | 'address' | 'payment' | 'scanning' | 'confirming';
-  setCheckoutStep?: React.Dispatch<React.SetStateAction<'idle' | 'address' | 'payment' | 'scanning' | 'confirming'>>;
+  checkoutStep?: 'idle' | 'address' | 'payment' | 'scanning' | 'confirming' | 'success';
+  setCheckoutStep?: React.Dispatch<React.SetStateAction<'idle' | 'address' | 'payment' | 'scanning' | 'confirming' | 'success'>>;
   refreshUser?: () => Promise<void>;
 }
 

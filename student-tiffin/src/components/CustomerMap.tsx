@@ -39,30 +39,8 @@ export const CustomerMap: React.FC<CustomerMapProps> = ({
   const rLat = driverLocation?.lat || dLat - 0.005; // Rider position
   const rLng = driverLocation?.lng || dLng - 0.005;
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      const handleMessage = (event: MessageEvent) => {
-        if (event.data && event.data.type === 'location_selected') {
-          if (interactive && onLocationSelect) {
-            onLocationSelect(event.data.lat, event.data.lng);
-          }
-        }
-      };
-      window.addEventListener('message', handleMessage);
-      return () => window.removeEventListener('message', handleMessage);
-    }
-  }, [interactive, onLocationSelect]);
-
-  const PulseDot = () => (
-    <View style={styles.pulseContainer}>
-      <View style={styles.pulseDot} />
-      <View style={styles.pulseRing} />
-    </View>
-  );
-
-  if (isWeb) {
-    const hasRider = !!driverLocation;
-    const leafletHtml = `
+  const hasRider = !!driverLocation;
+  const leafletHtml = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -173,6 +151,28 @@ export const CustomerMap: React.FC<CustomerMapProps> = ({
       </html>
     `;
 
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data && event.data.type === 'location_selected') {
+          if (interactive && onLocationSelect) {
+            onLocationSelect(event.data.lat, event.data.lng);
+          }
+        }
+      };
+      window.addEventListener('message', handleMessage);
+      return () => window.removeEventListener('message', handleMessage);
+    }
+  }, [interactive, onLocationSelect]);
+
+  const PulseDot = () => (
+    <View style={styles.pulseContainer}>
+      <View style={styles.pulseDot} />
+      <View style={styles.pulseRing} />
+    </View>
+  );
+
+  if (isWeb) {
     return (
       <View style={styles.container}>
         <iframe

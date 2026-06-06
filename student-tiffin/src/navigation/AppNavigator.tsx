@@ -62,7 +62,7 @@ const AppNavigatorComponent: React.FC = () => {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [activeRestaurant, setActiveRestaurant] = useState<any>(null);
 
-  const [checkoutStep, setCheckoutStep] = useState<'idle' | 'address' | 'payment' | 'scanning' | 'confirming'>('idle');
+  const [checkoutStep, setCheckoutStep] = useState<'idle' | 'address' | 'payment' | 'scanning' | 'confirming' | 'success'>('idle');
   const [history, setHistory] = useState<Screen[]>(['login']);
 
   // Load persisted cart on mount
