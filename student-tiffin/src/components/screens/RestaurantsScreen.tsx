@@ -2419,7 +2419,9 @@ export const RestaurantsScreen: React.FC<RestaurantsScreenProps> = ({
       )}
 
       {/* Reusable Bottom Bar - Rendered last to sit on top of all overlays */}
-      <BottomBar active="restaurants" navigate={navigate} />
+      {!viewingRestaurant && (
+        <BottomBar active="restaurants" navigate={navigate} />
+      )}
     </View>
   );
 };
