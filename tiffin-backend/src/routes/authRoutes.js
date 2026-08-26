@@ -12,14 +12,20 @@ const {
   firebaseLogin
 } = require('../controllers/authController');
 const { protect } = require('../middlewares/authMiddleware');
+const { authLimiter, otpLimiter } = require('../middlewares/rateLimiter');
 
-router.post('/register', registerUser);
-router.post('/login', authUser);
-router.post('/phone-login', phoneLogin);
-router.post('/send-otp', sendOTP);
-router.post('/firebase-login', firebaseLogin);
-router.post('/rider-login', riderLogin);
-router.post('/rider-signup', riderSignup);
+// 🔐 Auth routes – strict rate limiting (10 requests / 15 min per IP)
+router.post('/register', authLimiter, registerUser);
+router.post('/login', authLimiter, authUser);
+router.post('/firebase-login', authLimiter, firebaseLogin);
+router.post('/rider-login', authLimiter, riderLogin);
+router.post('/rider-signup', authLimiter, riderSignup);
+
+// 📱 OTP routes – 5 requests / 10 min per IP
+router.post('/phone-login', otpLimiter, phoneLogin);
+router.post('/send-otp', otpLimiter, sendOTP);
+
+// 👤 Profile routes – protected, no extra rate limit (general limiter covers it)
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
 
