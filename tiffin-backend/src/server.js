@@ -3,7 +3,9 @@ const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
 const connectDB = require('./config/db');
+const { generalLimiter } = require('./middlewares/rateLimiter');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -27,6 +29,12 @@ const server = http.createServer(app);
 
 // Enable CORS
 app.use(cors());
+
+// 🛡️ Security headers (XSS, clickjacking, MIME sniffing protection)
+app.use(helmet());
+
+// 🌐 Global API Rate Limiter – 200 requests/minute per IP
+app.use('/api', generalLimiter);
 
 // Body parser
 app.use(express.json());
