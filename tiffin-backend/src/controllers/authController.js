@@ -1,8 +1,10 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { logActivity } = require('../utils/activityLogger');
+const { setOTP, getOTP, deleteOTP } = require('../config/redis');
 
-const otpStore = {}; // In-memory OTP storage: phone -> { otp, expires }
+// In-memory OTP fallback (used when Redis is not configured)
+const otpStoreFallback = {};
 
 // Helper to sign JWT token
 const generateToken = (id) => {
@@ -328,12 +330,17 @@ exports.sendOTP = async (req, res) => {
   try {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 5 * 60 * 1000; // 5 min expiry
-    otpStore[phone] = { otp, expires };
+
+    // Try Redis first, fallback to in-memory
+    const savedToRedis = await setOTP(phone, otp);
+    if (!savedToRedis) {
+      otpStoreFallback[phone] = { otp, expires };
+    }
 
     console.log(`\n🔑 [OTP Verification Code]`);
     console.log(`📱 Phone: +91 ${phone}`);
     console.log(`🎫 Code: ${otp}`);
-    console.log(`⏳ Expires: 5 mins\n`);
+    console.log(`⏳ Expires: 5 mins (${savedToRedis ? 'Redis' : 'In-Memory'})\n`);
 
     res.json({
       success: true,
@@ -356,16 +363,28 @@ exports.phoneLogin = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Mobile number and OTP are required' });
   }
 
-  const record = otpStore[phone];
   const isMasterCode = otp === '123456';
-  const isValidOTP = record && record.otp === otp && record.expires > Date.now();
+  let isValidOTP = false;
+
+  if (!isMasterCode) {
+    // Try Redis first, then in-memory fallback
+    const redisOtp = await getOTP(phone);
+    if (redisOtp) {
+      isValidOTP = redisOtp === String(otp);
+    } else {
+      // Fallback: check in-memory store
+      const record = otpStoreFallback[phone];
+      isValidOTP = record && record.otp === otp && record.expires > Date.now();
+    }
+  }
 
   if (!isMasterCode && !isValidOTP) {
     return res.status(400).json({ success: false, message: 'Invalid or expired OTP verification code' });
   }
 
-  // Clear OTP record
-  delete otpStore[phone];
+  // Clear OTP from Redis and in-memory fallback
+  await deleteOTP(phone);
+  delete otpStoreFallback[phone];
 
   try {
     let user = await User.findOne({ phone });
